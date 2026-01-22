@@ -6,8 +6,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { PayoutsModule } from './modules/payouts/payouts.module';
+import { QuestsModule } from './modules/quests/quests.module';
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
 import { Payout } from './modules/payouts/entities/payout.entity';
+import { Quest } from './modules/quests/entities/quest.entity';
 
 @Module({
   imports: [
@@ -20,7 +22,7 @@ import { Payout } from './modules/payouts/entities/payout.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [RefreshToken, Payout],
+        entities: [RefreshToken, Payout, Quest],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
       }),
@@ -38,9 +40,9 @@ import { Payout } from './modules/payouts/entities/payout.entity';
     }),
     AuthModule,
     PayoutsModule,
+    QuestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
-
+export class AppModule {}
