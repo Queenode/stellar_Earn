@@ -6,6 +6,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
+import { QuestsModule } from './modules/quests/quests.module';
+import { Quest } from './modules/quests/entities/quest.entity';
 
 @Module({
   imports: [
@@ -18,7 +20,7 @@ import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [RefreshToken],
+        entities: [RefreshToken, Quest],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
       }),
@@ -35,6 +37,7 @@ import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
       inject: [ConfigService],
     }),
     AuthModule,
+    QuestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
