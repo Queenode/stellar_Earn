@@ -50,6 +50,14 @@ export class LoginDto {
     challenge: string;
 }
 
+export class UserResponseDto {
+    @ApiProperty()
+    stellarAddress: string;
+
+    @ApiProperty()
+    role: string;
+}
+
 export class TokenResponseDto {
     @ApiProperty({
         description: 'JWT access token',
@@ -65,14 +73,6 @@ export class TokenResponseDto {
         description: 'User information',
     })
     user: UserResponseDto;
-}
-
-export class UserResponseDto {
-    @ApiProperty()
-    stellarAddress: string;
-
-    @ApiProperty()
-    role: string;
 }
 
 export class RefreshTokenDto {
