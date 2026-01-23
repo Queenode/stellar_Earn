@@ -6,6 +6,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { NotificationsService } from './notifications/notifications/notifications.service';
+import { NotificationsService } from './notifications/notifications.service';
 
 @Module({
   imports: [
@@ -35,9 +38,10 @@ import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
       inject: [ConfigService],
     }),
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, NotificationsService],
 })
 export class AppModule { }
 
