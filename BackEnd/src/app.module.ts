@@ -4,10 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler/dist/throttler.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { SubmissionsModule } from './modules/submissions/submissions.module';
 import { StellarModule } from './modules/stellar/stellar.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { QuestsModule } from './modules/quests/quests.module';
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
 import { Submission } from './modules/submissions/entities/submission.entity';
 import { Quest } from './modules/quests/entities/quest.entity';
@@ -16,6 +18,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
 
 @Module({
   imports: [
+    WebhooksModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -25,7 +28,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [RefreshToken, Submission, Quest, User, Notification], // Add all entities
+        entities: [RefreshToken, Submission, Quest, User, Notification],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
       }),
@@ -42,6 +45,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
       inject: [ConfigService],
     }),
     AuthModule,
+    QuestsModule,
     SubmissionsModule,
     StellarModule,
     NotificationsModule,

@@ -50,7 +50,6 @@ export class LoginDto {
   challenge: string;
 }
 
-// MOVED: UserResponseDto must be defined BEFORE TokenResponseDto uses it
 export class UserResponseDto {
   @ApiProperty()
   stellarAddress: string;

@@ -15,7 +15,6 @@ import { NotificationsService } from '../notifications/notifications.service';
 
 interface QuestVerifier {
   id: string;
-  // Add other verifier properties as needed
 }
 
 interface QuestWithVerifiers {
@@ -41,7 +40,6 @@ export class SubmissionsService {
     approveDto: ApproveSubmissionDto,
     verifierId: string,
   ): Promise<Submission> {
-    // Fetch submission with relations
     const submission = await this.submissionsRepository.findOne({
       where: { id: submissionId },
       relations: ['quest', 'user'],
@@ -53,13 +51,9 @@ export class SubmissionsService {
       );
     }
 
-    // Validate verifier authorization
     await this.validateVerifierAuthorization(submission.quest.id, verifierId);
-
-    // Validate status transition
     this.validateStatusTransition(submission.status, SubmissionStatus.APPROVED);
 
-    // Handle concurrent approval attempts using optimistic locking
     const updateResult = await this.submissionsRepository
       .createQueryBuilder()
       .update(Submission)
@@ -79,7 +73,6 @@ export class SubmissionsService {
       );
     }
 
-    // Trigger smart contract interaction for on-chain approval
     try {
       await this.stellarService.approveSubmission(
         submission.quest.contractTaskId,
@@ -87,7 +80,6 @@ export class SubmissionsService {
         submission.quest.rewardAmount,
       );
     } catch (error) {
-      // Rollback status if blockchain transaction fails
       await this.submissionsRepository.update(submissionId, {
         status: submission.status,
         approvedBy: undefined,
@@ -100,7 +92,6 @@ export class SubmissionsService {
       );
     }
 
-    // Fetch updated submission
     const updatedSubmission = await this.submissionsRepository.findOne({
       where: { id: submissionId },
       relations: ['quest', 'user'],
@@ -110,7 +101,6 @@ export class SubmissionsService {
       throw new NotFoundException('Submission not found after update');
     }
 
-    // Send notification to user
     await this.notificationsService.sendSubmissionApproved(
       updatedSubmission.user.id,
       updatedSubmission.quest.title,
@@ -128,7 +118,6 @@ export class SubmissionsService {
     rejectDto: RejectSubmissionDto,
     verifierId: string,
   ): Promise<Submission> {
-    // Fetch submission with relations
     const submission = await this.submissionsRepository.findOne({
       where: { id: submissionId },
       relations: ['quest', 'user'],
@@ -140,18 +129,13 @@ export class SubmissionsService {
       );
     }
 
-    // Validate verifier authorization
     await this.validateVerifierAuthorization(submission.quest.id, verifierId);
-
-    // Validate status transition
     this.validateStatusTransition(submission.status, SubmissionStatus.REJECTED);
 
-    // Validate rejection reason is provided
     if (!rejectDto.reason || rejectDto.reason.trim().length === 0) {
       throw new BadRequestException('Rejection reason is required');
     }
 
-    // Handle concurrent rejection attempts
     const updateResult = await this.submissionsRepository
       .createQueryBuilder()
       .update(Submission)
@@ -172,7 +156,6 @@ export class SubmissionsService {
       );
     }
 
-    // Fetch updated submission
     const updatedSubmission = await this.submissionsRepository.findOne({
       where: { id: submissionId },
       relations: ['quest', 'user'],
@@ -182,7 +165,6 @@ export class SubmissionsService {
       throw new NotFoundException('Submission not found after update');
     }
 
-    // Send notification to user
     await this.notificationsService.sendSubmissionRejected(
       updatedSubmission.user.id,
       updatedSubmission.quest.title,
@@ -192,15 +174,10 @@ export class SubmissionsService {
     return updatedSubmission;
   }
 
-  /**
-   * Validate that the verifier is authorized to approve/reject this quest
-   */
   private async validateVerifierAuthorization(
     questId: string,
     verifierId: string,
   ): Promise<void> {
-    // This would typically check against a quest verifiers table or role-based permissions
-    // For now, we'll use a simplified check
     const quest = await this.getQuestWithVerifiers(questId);
 
     const isAuthorized =
@@ -215,9 +192,6 @@ export class SubmissionsService {
     }
   }
 
-  /**
-   * Validate status transitions to prevent invalid state changes
-   */
   private validateStatusTransition(
     currentStatus: SubmissionStatus,
     newStatus: SubmissionStatus,
@@ -233,9 +207,9 @@ export class SubmissionsService {
         SubmissionStatus.REJECTED,
         SubmissionStatus.PENDING,
       ],
-      [SubmissionStatus.APPROVED]: [], // Cannot transition from approved
-      [SubmissionStatus.REJECTED]: [SubmissionStatus.PENDING], // Allow resubmission
-      [SubmissionStatus.PAID]: [], // Cannot transition from paid
+      [SubmissionStatus.APPROVED]: [],
+      [SubmissionStatus.REJECTED]: [SubmissionStatus.PENDING],
+      [SubmissionStatus.PAID]: [],
     };
 
     if (!validTransitions[currentStatus]?.includes(newStatus)) {
@@ -245,13 +219,7 @@ export class SubmissionsService {
     }
   }
 
-  /**
-   * Get quest with verifier information
-   * TODO: Implement actual quest fetching logic with database query
-   */
   private getQuestWithVerifiers(questId: string): Promise<QuestWithVerifiers> {
-    // This would fetch from your quests service/repository
-    // Placeholder implementation - replace with actual database query
     return Promise.resolve({
       id: questId,
       verifiers: [],
@@ -259,21 +227,11 @@ export class SubmissionsService {
     });
   }
 
-  /**
-   * Check if user has admin role
-   * TODO: Implement actual role checking logic
-   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private checkAdminRole(userId: string): Promise<boolean> {
-    // Implement your role checking logic here
-    // This would typically check against a users or roles table
-    // Placeholder implementation - replace with actual database query
     return Promise.resolve(false);
   }
 
-  /**
-   * Get submission by ID with full details
-   */
   async findOne(submissionId: string): Promise<Submission> {
     const submission = await this.submissionsRepository.findOne({
       where: { id: submissionId },
@@ -289,9 +247,6 @@ export class SubmissionsService {
     return submission;
   }
 
-  /**
-   * Get all submissions for a quest
-   */
   async findByQuest(questId: string): Promise<Submission[]> {
     return this.submissionsRepository.find({
       where: { quest: { id: questId } },
