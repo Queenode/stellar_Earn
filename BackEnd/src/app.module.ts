@@ -6,15 +6,18 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { SubmissionsModule } from './modules/submissions/submissions.module';
 import { StellarModule } from './modules/stellar/stellar.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { QuestsModule } from './modules/quests/quests.module';
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
-import { Submission } from './modules/submissions/entities/submission.entity';
-import { Quest } from './modules/quests/entities/quest.entity';
 import { User } from './modules/users/entities/user.entity';
+import { Quest } from './modules/quests/entities/quest.entity';
+import { Submission } from './modules/submissions/entities/submission.entity';
 import { Notification } from './modules/notifications/entities/notification.entity';
+import { Payout } from './modules/analytics/entities/payout.entity';
+import { AnalyticsSnapshot } from './modules/analytics/entities/analytics-snapshot.entity';
 
 @Module({
   imports: [
@@ -28,7 +31,15 @@ import { Notification } from './modules/notifications/entities/notification.enti
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [RefreshToken, Submission, Quest, User, Notification],
+        entities: [
+          RefreshToken,
+          User,
+          Quest,
+          Submission,
+          Notification,
+          Payout,
+          AnalyticsSnapshot,
+        ],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
       }),
@@ -45,6 +56,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
       inject: [ConfigService],
     }),
     AuthModule,
+    AnalyticsModule,
     QuestsModule,
     SubmissionsModule,
     StellarModule,
