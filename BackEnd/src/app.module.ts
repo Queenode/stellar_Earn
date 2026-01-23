@@ -23,9 +23,14 @@ import { Submission as AnalyticsSubmission } from './modules/analytics/entities/
 import { Payout as AnalyticsPayout } from './modules/analytics/entities/payout.entity';
 import { AnalyticsSnapshot } from './modules/analytics/entities/analytics-snapshot.entity';
 import { Submission } from './modules/submissions/entities/submission.entity';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { ErrorLoggerFilter } from './common/filter/error-logger.filter';
 
 @Module({
   imports: [
+    
     WebhooksModule,
     ConfigModule.forRoot({
       isGlobal: true,
