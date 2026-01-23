@@ -27,6 +27,12 @@ pub fn create_quest(
         return Err(Error::InvalidParticipantLimit);
     }
 
+    // Validate deadline is in the future
+    let current_time = env.ledger().timestamp();
+    if deadline <= current_time {
+        return Err(Error::InvalidDeadline);
+    }
+
     // Check quest doesn't already exist
     if storage::has_quest(env, &id) {
         return Err(Error::QuestAlreadyExists);
@@ -121,4 +127,57 @@ pub fn validate_quest_active(env: &Env, quest: &Quest) -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+/// Check if a quest has expired based on its deadline
+pub fn check_expired(env: &Env, quest: &Quest) -> bool {
+    let current_time = env.ledger().timestamp();
+    current_time > quest.deadline
+}
+
+/// Manually expire a quest (admin/creator only)
+pub fn expire_quest(env: &Env, quest_id: &Symbol, caller: &Address) -> Result<(), Error> {
+    // Verify caller authorization
+    caller.require_auth();
+
+    // Get quest
+    let mut quest = storage::get_quest(env, quest_id).ok_or(Error::QuestNotFound)?;
+
+    // Verify caller is the creator
+    if quest.creator != *caller {
+        return Err(Error::Unauthorized);
+    }
+
+    // Check if quest is already expired or completed
+    if quest.status == QuestStatus::Expired {
+        return Err(Error::InvalidStatusTransition);
+    }
+
+    if quest.status == QuestStatus::Completed {
+        return Err(Error::InvalidStatusTransition);
+    }
+
+    // Update status to Expired
+    quest.status = QuestStatus::Expired;
+    storage::set_quest(env, &quest);
+
+    // Emit event
+    env.events()
+        .publish((Symbol::new(env, "quest_exp"), quest_id.clone()), quest);
+
+    Ok(())
+}
+
+/// Automatically expire quest if deadline has passed
+pub fn auto_expire_quest_if_deadline_passed(env: &Env, quest: &mut Quest) {
+    if check_expired(env, quest) && quest.status == QuestStatus::Active {
+        quest.status = QuestStatus::Expired;
+        storage::set_quest(env, quest);
+
+        // Emit event
+        env.events().publish(
+            (Symbol::new(env, "auto_exp"), quest.id.clone()),
+            quest.clone(),
+        );
+    }
 }
