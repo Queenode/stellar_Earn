@@ -24,4 +24,5 @@ pub enum Error {
     UnauthorizedVerifier = 13,
     InvalidStatusTransition = 14,
     SubmissionAlreadyProcessed = 15,
+    InvalidDeadline = 21,
 }

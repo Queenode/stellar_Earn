@@ -93,7 +93,7 @@
             "data": {
               "vec": [
                 {
-                  "symbol": "Q002"
+                  "symbol": "quest2"
                 },
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
@@ -111,10 +111,10 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
-                  "u64": 1000000
+                  "u64": 0
                 },
                 {
-                  "u32": 0
+                  "u32": 10
                 }
               ]
             }
@@ -140,7 +140,7 @@
             ],
             "data": {
               "error": {
-                "contract": 7
+                "contract": 21
               }
             }
           }
@@ -161,7 +161,7 @@
               },
               {
                 "error": {
-                  "contract": 7
+                  "contract": 21
                 }
               }
             ],
@@ -186,7 +186,7 @@
               },
               {
                 "error": {
-                  "contract": 7
+                  "contract": 21
                 }
               }
             ],
@@ -201,7 +201,7 @@
                 {
                   "vec": [
                     {
-                      "symbol": "Q002"
+                      "symbol": "quest2"
                     },
                     {
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
@@ -219,10 +219,10 @@
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                     },
                     {
-                      "u64": 1000000
+                      "u64": 0
                     },
                     {
-                      "u32": 0
+                      "u32": 10
                     }
                   ]
                 }

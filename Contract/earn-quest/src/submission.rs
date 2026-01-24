@@ -1,9 +1,8 @@
 use crate::errors::Error;
 use crate::quest;
-use crate::errors::Error;
 use crate::storage;
-use crate::types::{QuestStatus, Submission, SubmissionStatus};
-use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
+use crate::types::{Submission, SubmissionStatus};
+use soroban_sdk::{Address, BytesN, Env, Symbol};
 
 /// Submit proof of quest completion
 /// Validates that the quest exists, is active, hasn't expired, and user hasn't already submitted
@@ -17,7 +16,10 @@ pub fn submit_proof(
     submitter.require_auth();
 
     // Get quest
-    let quest = storage::get_quest(env, &quest_id).ok_or(Error::QuestNotFound)?;
+    let mut quest = storage::get_quest(env, &quest_id).ok_or(Error::QuestNotFound)?;
+
+    // Auto-expire quest if deadline has passed
+    quest::auto_expire_quest_if_deadline_passed(env, &mut quest);
 
     // Validate quest is active and accepting submissions
     quest::validate_quest_active(env, &quest)?;
@@ -40,10 +42,8 @@ pub fn submit_proof(
     storage::set_submission(env, &submission);
 
     // Emit event
-    env.events().publish(
-        (Symbol::new(env, "proof_sub"), quest_id),
-        submitter,
-    );
+    env.events()
+        .publish((Symbol::new(env, "proof_sub"), quest_id), submitter);
 
     Ok(())
 }
@@ -67,8 +67,8 @@ pub fn approve_submission(
     }
 
     // Get submission
-    let mut submission = storage::get_submission(env, quest_id, submitter)
-        .ok_or(Error::SubmissionNotFound)?;
+    let mut submission =
+        storage::get_submission(env, quest_id, submitter).ok_or(Error::SubmissionNotFound)?;
 
     // Check submission is pending
     if submission.status != SubmissionStatus::Pending {
@@ -119,8 +119,8 @@ pub fn reject_submission(
     }
 
     // Get submission
-    let mut submission = storage::get_submission(env, quest_id, submitter)
-        .ok_or(Error::SubmissionNotFound)?;
+    let mut submission =
+        storage::get_submission(env, quest_id, submitter).ok_or(Error::SubmissionNotFound)?;
 
     // Check submission is pending
     if submission.status != SubmissionStatus::Pending {

@@ -1,6 +1,6 @@
 {
   "generators": {
-    "address": 6,
+    "address": 5,
     "nonce": 0
   },
   "auth": [
@@ -14,7 +14,7 @@
               "function_name": "register_quest",
               "args": [
                 {
-                  "symbol": "quest1"
+                  "symbol": "quest7"
                 },
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
@@ -54,7 +54,7 @@
               "function_name": "submit_proof",
               "args": [
                 {
-                  "symbol": "quest1"
+                  "symbol": "quest7"
                 },
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
@@ -91,7 +91,7 @@
                   "symbol": "Quest"
                 },
                 {
-                  "symbol": "quest1"
+                  "symbol": "quest7"
                 }
               ]
             },
@@ -111,7 +111,7 @@
                       "symbol": "Quest"
                     },
                     {
-                      "symbol": "quest1"
+                      "symbol": "quest7"
                     }
                   ]
                 },
@@ -139,7 +139,7 @@
                         "symbol": "id"
                       },
                       "val": {
-                        "symbol": "quest1"
+                        "symbol": "quest7"
                       }
                     },
                     {
@@ -216,7 +216,7 @@
                   "symbol": "Submission"
                 },
                 {
-                  "symbol": "quest1"
+                  "symbol": "quest7"
                 },
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
@@ -239,7 +239,7 @@
                       "symbol": "Submission"
                     },
                     {
-                      "symbol": "quest1"
+                      "symbol": "quest7"
                     },
                     {
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
@@ -262,7 +262,7 @@
                         "symbol": "quest_id"
                       },
                       "val": {
-                        "symbol": "quest1"
+                        "symbol": "quest7"
                       }
                     },
                     {
@@ -445,7 +445,7 @@
             "data": {
               "vec": [
                 {
-                  "symbol": "quest1"
+                  "symbol": "quest7"
                 },
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
@@ -487,7 +487,7 @@
                 "symbol": "quest_reg"
               },
               {
-                "symbol": "quest1"
+                "symbol": "quest7"
               }
             ],
             "data": {
@@ -513,7 +513,7 @@
                     "symbol": "id"
                   },
                   "val": {
-                    "symbol": "quest1"
+                    "symbol": "quest7"
                   }
                 },
                 {
@@ -620,7 +620,7 @@
             "data": {
               "vec": [
                 {
-                  "symbol": "quest1"
+                  "symbol": "quest7"
                 },
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
@@ -647,7 +647,7 @@
                 "symbol": "proof_sub"
               },
               {
-                "symbol": "quest1"
+                "symbol": "quest7"
               }
             ],
             "data": {
@@ -694,19 +694,16 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "reject_submission"
+                "symbol": "get_submission"
               }
             ],
             "data": {
               "vec": [
                 {
-                  "symbol": "quest1"
+                  "symbol": "quest7"
                 },
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
                 }
               ]
             }
@@ -727,81 +724,54 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "reject_submission"
+                "symbol": "get_submission"
               }
             ],
             "data": {
-              "error": {
-                "contract": 8
-              }
-            }
-          }
-        }
-      },
-      "failed_call": true
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "error"
-              },
-              {
-                "error": {
-                  "contract": 8
-                }
-              }
-            ],
-            "data": {
-              "string": "escalating Ok(ScErrorType::Contract) frame-exit to Err"
-            }
-          }
-        }
-      },
-      "failed_call": true
-    },
-    {
-      "event": {
-        "ext": "v0",
-        "contract_id": null,
-        "type_": "diagnostic",
-        "body": {
-          "v0": {
-            "topics": [
-              {
-                "symbol": "error"
-              },
-              {
-                "error": {
-                  "contract": 8
-                }
-              }
-            ],
-            "data": {
-              "vec": [
+              "map": [
                 {
-                  "string": "contract try_call failed"
+                  "key": {
+                    "symbol": "proof_hash"
+                  },
+                  "val": {
+                    "bytes": "0101010101010101010101010101010101010101010101010101010101010101"
+                  }
                 },
                 {
-                  "symbol": "reject_submission"
+                  "key": {
+                    "symbol": "quest_id"
+                  },
+                  "val": {
+                    "symbol": "quest7"
+                  }
                 },
                 {
-                  "vec": [
-                    {
-                      "symbol": "quest1"
-                    },
-                    {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
-                    },
-                    {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
-                    }
-                  ]
+                  "key": {
+                    "symbol": "status"
+                  },
+                  "val": {
+                    "vec": [
+                      {
+                        "symbol": "Pending"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "submitter"
+                  },
+                  "val": {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "timestamp"
+                  },
+                  "val": {
+                    "u64": 0
+                  }
                 }
               ]
             }
