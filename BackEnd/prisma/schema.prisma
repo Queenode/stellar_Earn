@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -14,6 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------- USERS ----------
 model User {
   id             String   @id @default(uuid())
   stellarAddress String   @unique
@@ -24,29 +19,32 @@ model User {
   level          Int      @default(1)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  
+
   submissions    Submission[]
   notifications  Notification[]
+  payouts        Payout[]
 }
 
+// ---------- QUESTS ----------
 model Quest {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   title             String
   description       String
   contractTaskId    String
   rewardAsset       String
   rewardAmount      Int
   deadline          DateTime?
-  status            String   @default("ACTIVE")
+  status            String    @default("ACTIVE")
   verifierType      String
   verifierConfig    Json
   createdBy         String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
+
   submissions       Submission[]
 }
 
+// ---------- SUBMISSIONS ----------
 model Submission {
   id               String    @id @default(uuid())
   questId          String
@@ -61,15 +59,16 @@ model Submission {
   verifierNotes    String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-  
+
   quest            Quest     @relation(fields: [questId], references: [id])
   user             User      @relation(fields: [userId], references: [id])
-  
+
   @@index([questId])
   @@index([userId])
   @@index([status])
 }
 
+// ---------- NOTIFICATIONS ----------
 model Notification {
   id        String    @id @default(uuid())
   userId    String
@@ -80,9 +79,38 @@ model Notification {
   read      Boolean   @default(false)
   readAt    DateTime?
   createdAt DateTime  @default(now())
-  
+
   user      User      @relation(fields: [userId], references: [id])
-  
+
   @@index([userId])
   @@index([read])
+}
+
+// ---------- PAYOUTS ----------
+model Payout {
+  id           String   @id @default(uuid())
+  userId       String
+  amount       Int
+  asset        String
+  status       String   @default("PENDING")
+  transaction  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ---------- ANALYTICS SNAPSHOTS ----------
+model AnalyticsSnapshot {
+  id          String   @id @default(uuid())
+  metric      String
+  value       Float
+  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([metric])
+  @@index([timestamp])
 }
