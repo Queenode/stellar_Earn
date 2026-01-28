@@ -9,8 +9,7 @@ export interface RateLimitOptions {
 }
 
 export const RateLimit = (options: RateLimitOptions = {}):
-  | MethodDecorator
-  | ClassDecorator => {
+  MethodDecorator & ClassDecorator => {
   const { name = 'default', limit, ttlSeconds, blockDurationSeconds } = options;
 
   const throttlerOptions: Record<string, Record<string, number>> = {
