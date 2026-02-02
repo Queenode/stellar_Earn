@@ -9,6 +9,8 @@ interface SubmissionFormProps {
   isExpired?: boolean;
   isFull?: boolean;
   onSubmit?: (data: { questId: string; proof: File | null; notes: string }) => void;
+  onClose?: () => void;
+  onSuccess?: () => void;
 }
 
 export function SubmissionForm({
@@ -17,6 +19,8 @@ export function SubmissionForm({
   isExpired = false,
   isFull = false,
   onSubmit,
+  onClose,
+  onSuccess,
 }: SubmissionFormProps) {
   const [proof, setProof] = useState<File | null>(null);
   const [notes, setNotes] = useState('');
@@ -48,6 +52,10 @@ export function SubmissionForm({
 
     setShowSuccess(true);
     setIsSubmitting(false);
+
+    if (onSuccess) {
+      onSuccess();
+    }
 
     // Reset form after 3 seconds
     setTimeout(() => {
@@ -190,6 +198,9 @@ export function SubmissionForm({
               setHasStarted(false);
               setProof(null);
               setNotes('');
+              if (onClose) {
+                onClose();
+              }
             }}
             disabled={isSubmitting}
             className="flex-1 rounded-lg border border-zinc-300 bg-white px-6 py-3 font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900"
