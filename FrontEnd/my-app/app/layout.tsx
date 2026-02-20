@@ -46,35 +46,27 @@ export default function RootLayout({
   `;
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-<<<<<<< HEAD
         <ThemeProvider>
-          <WalletProvider>
-            <ToastProvider>
-              {children}
-              <WalletModal />
-            </ToastProvider>
-          </WalletProvider>
+          <A11yAnnouncerProvider>
+            <WalletProvider>
+              <AnalyticsProvider>
+                <ToastProvider>
+                  <SkipToContent />
+                  {children}
+                  <ConsentBanner />
+                  <WalletModal />
+                </ToastProvider>
+              </AnalyticsProvider>
+            </WalletProvider>
+          </A11yAnnouncerProvider>
         </ThemeProvider>
-=======
-        <A11yAnnouncerProvider>
-          <WalletProvider>
-            <AnalyticsProvider>
-              <ToastProvider>
-                <SkipToContent />
-                {children}
-                <ConsentBanner />
-              </ToastProvider>
-            </AnalyticsProvider>
-          </WalletProvider>
-        </A11yAnnouncerProvider>
->>>>>>> 5f37afa054ad754e8f7755fe07aafef2cf896d18
       </body>
     </html>
   );

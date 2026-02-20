@@ -27,7 +27,6 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
-      {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 lg:hidden"
@@ -35,13 +34,11 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-50 h-full w-64 transform border-r border-zinc-200 bg-white transition-transform dark:border-zinc-800 dark:bg-zinc-900 lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Logo */}
         <div className="flex h-16 items-center gap-2 border-b border-zinc-200 px-6 dark:border-zinc-800">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500">
             <span className="text-sm font-bold text-white">S</span>
@@ -52,18 +49,12 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           </span>
           <button
             onClick={() => setSidebarOpen(false)}
-<<<<<<< HEAD
             className="ml-auto rounded-lg p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 lg:hidden"
-=======
-            className="ml-auto rounded-lg p-1 text-zinc-500 hover:bg-zinc-800 lg:hidden"
-            aria-label="Close sidebar"
->>>>>>> 5f37afa054ad754e8f7755fe07aafef2cf896d18
           >
-            <span aria-hidden="true">✕</span>
+            ✕
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex h-[calc(100%-4rem)] flex-col">
           <div className="flex-1 space-y-1 p-4">
             {navItems.map((item) => {
@@ -86,7 +77,6 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             })}
           </div>
 
-          {/* User Info */}
           <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
             <div className="mb-3 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 font-semibold text-white">
@@ -99,35 +89,19 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <p className="text-xs text-zinc-500">Level {defaultUser.level}</p>
               </div>
             </div>
-<<<<<<< HEAD
             <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
               <span>→</span>
-=======
-            <button 
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
-              aria-label="Sign out"
-            >
-              <span aria-hidden="true">→</span>
->>>>>>> 5f37afa054ad754e8f7755fe07aafef2cf896d18
               Sign Out
             </button>
           </div>
         </nav>
       </aside>
 
-      {/* Main content */}
       <div className="lg:pl-64">
-        {/* Mobile header */}
         <header className="sticky top-0 z-30 flex h-16 items-center border-b border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-900 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-<<<<<<< HEAD
             className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-=======
-            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800"
-            aria-label="Open sidebar menu"
-            aria-expanded={sidebarOpen}
->>>>>>> 5f37afa054ad754e8f7755fe07aafef2cf896d18
           >
             <svg
               className="h-6 w-6"
@@ -154,14 +128,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           </div>
         </header>
 
-        {/* Page content */}
-<<<<<<< HEAD
         <main className="p-6 lg:p-8">{children}</main>
-=======
-        <main id="main-content" className="p-6 lg:p-8">
-          {children}
-        </main>
->>>>>>> 5f37afa054ad754e8f7755fe07aafef2cf896d18
       </div>
     </div>
   );
