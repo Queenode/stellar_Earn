@@ -1,9 +1,9 @@
 'use client';
 
 import { QuestCard } from './QuestCard';
-import { QuestCardSkeleton } from './QuestCardSkeleton';
 import { EmptyQuestState } from './EmptyQuestState';
 import type { Quest } from '@/lib/types/quest';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface QuestListProps {
   quests: Quest[];
@@ -53,7 +53,7 @@ export function QuestList({
     return (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
-          <QuestCardSkeleton key={i} />
+          <Skeleton.Card key={i} />
         ))}
       </div>
     );

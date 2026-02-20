@@ -1,6 +1,7 @@
 'use client';
 
 import type { UserStats } from '@/lib/types/dashboard';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface StatsCardsProps {
   stats: UserStats | null;
@@ -23,12 +24,12 @@ function StatCard({ title, value, icon, iconBg, trend, isLoading }: StatCardProp
   if (isLoading) {
     return (
       <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="h-10 w-10 animate-pulse rounded-lg bg-zinc-700" />
-          <div className="h-4 w-12 animate-pulse rounded bg-zinc-700" />
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton.Text className="h-10 w-10 rounded-lg bg-zinc-700 dark:bg-zinc-700" />
+          <Skeleton.Text className="h-4 w-12 bg-zinc-700 dark:bg-zinc-700" />
         </div>
-        <div className="h-8 w-20 animate-pulse rounded bg-zinc-700 mb-1" />
-        <div className="h-4 w-24 animate-pulse rounded bg-zinc-700" />
+        <Skeleton.Text className="mb-2 h-8 w-20 bg-zinc-700 dark:bg-zinc-700" />
+        <Skeleton.Text className="h-4 w-24 bg-zinc-700 dark:bg-zinc-700" />
       </div>
     );
   }
