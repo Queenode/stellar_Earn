@@ -3,7 +3,7 @@
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import NotificationBell from "../notifications/NotificationBell";
 import { ConnectButton } from "@/components/wallet/ConnectButton";
-import { WalletModal } from "@/components/wallet/WalletModal";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export function Header() {
   return (
@@ -41,13 +41,11 @@ export function Header() {
 
         {/* User actions */}
         <div className="flex shrink-0 items-center gap-3">
+          <ThemeToggle />
           <NotificationBell />
         </div>
 
         <ConnectButton />
-
-        {/* Wallet Modal */}
-        <WalletModal />
       </div>
     </header>
   );

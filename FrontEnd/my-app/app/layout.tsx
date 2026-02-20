@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/notifications/Toast";
+import { ThemeProvider } from "@/app/providers/ThemeProvider";
+import { WalletModal } from "@/components/wallet/WalletModal";
 import { WalletProvider } from "@/context/WalletContext";
 
 const geistSans = Geist({
@@ -25,14 +27,36 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const themeInitScript = `
+    (function() {
+      try {
+        var stored = localStorage.getItem('stellar_earn_theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = stored === 'dark' || stored === 'light' ? stored : (prefersDark ? 'dark' : 'light');
+        var root = document.documentElement;
+        root.classList.toggle('dark', theme === 'dark');
+        root.setAttribute('data-theme', theme);
+        root.style.colorScheme = theme;
+      } catch (e) {}
+    })();
+  `;
+
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <WalletProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </WalletProvider>
+        <ThemeProvider>
+          <WalletProvider>
+            <ToastProvider>
+              {children}
+              <WalletModal />
+            </ToastProvider>
+          </WalletProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -22,19 +22,19 @@ interface StatCardProps {
 function StatCard({ title, value, icon, iconBg, trend, isLoading }: StatCardProps) {
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex items-center justify-between mb-4">
-          <div className="h-10 w-10 animate-pulse rounded-lg bg-zinc-700" />
-          <div className="h-4 w-12 animate-pulse rounded bg-zinc-700" />
+          <div className="h-10 w-10 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-700" />
+          <div className="h-4 w-12 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700" />
         </div>
-        <div className="h-8 w-20 animate-pulse rounded bg-zinc-700 mb-1" />
-        <div className="h-4 w-24 animate-pulse rounded bg-zinc-700" />
+        <div className="h-8 w-20 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700 mb-1" />
+        <div className="h-4 w-24 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700" />
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 transition-all hover:border-zinc-700">
+    <div className="rounded-xl border border-zinc-200 bg-white p-5 transition-all hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
       <div className="flex items-center justify-between mb-4">
         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}>
           {icon}
@@ -55,8 +55,8 @@ function StatCard({ title, value, icon, iconBg, trend, isLoading }: StatCardProp
           </span>
         )}
       </div>
-      <h3 className="text-2xl font-bold text-zinc-50">{value}</h3>
-      <p className="text-sm text-zinc-400">{title}</p>
+      <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{value}</h3>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">{title}</p>
     </div>
   );
 }

@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import { WalletModal } from "@/components/wallet/WalletModal";
 import { Header } from "@/components/layout/Header";
 
 export default function Home() {
@@ -16,13 +14,11 @@ export default function Home() {
             Welcome to Stellar Earn
           </h1>
           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-           StellarEarn is a quest-based earning platform where teams define tasks ("quests"), contributors complete them, and rewards are distributed on-chain via Stellar smart contracts (Soroban). Users level up by completing quests, building an on-chain reputation trail and unlocking higher-value opportunities.
+           StellarEarn is a quest-based earning platform where teams define tasks (&quot;quests&quot;), contributors complete them, and rewards are distributed on-chain via Stellar smart contracts (Soroban). Users level up by completing quests, building an on-chain reputation trail and unlocking higher-value opportunities.
           </p>
         </div>
         {/* ConnectButton is now in the Header */}
       
-        {/* Wallet Modal */}
-        <WalletModal />
       </main>
       </div>
     </div>
