@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/notifications/Toast";
 import { WalletProvider } from "@/context/WalletContext";
+import { AnalyticsProvider } from "@/app/providers/AnalyticsProvider";
+import { ConsentBanner } from "@/components/analytics/ConsentBanner";
 import { SkipToContent } from "@/components/a11y/SkipToContent";
 import { A11yAnnouncerProvider } from "@/components/a11y/A11yAnnouncer";
 
@@ -34,8 +36,13 @@ export default function RootLayout({
       >
         <A11yAnnouncerProvider>
           <WalletProvider>
-            <SkipToContent />
-            <ToastProvider>{children}</ToastProvider>
+            <AnalyticsProvider>
+              <ToastProvider>
+                <SkipToContent />
+                {children}
+                <ConsentBanner />
+              </ToastProvider>
+            </AnalyticsProvider>
           </WalletProvider>
         </A11yAnnouncerProvider>
       </body>
