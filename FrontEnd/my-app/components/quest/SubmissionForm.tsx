@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { FileUpload } from '@/components/ui/FileUpload';
+import { LoadingOverlay } from '@/components/ui/LoadingOverlay';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface SubmissionFormProps {
   questId: string;
@@ -83,7 +85,7 @@ export function SubmissionForm({
           Interest Registered!
         </h3>
         <p className="text-sm text-green-700 dark:text-green-300">
-          You've marked your interest in this quest. Submission functionality coming soon!
+          You&apos;ve marked your interest in this quest. Submission functionality coming soon!
         </p>
       </div>
     );
@@ -96,8 +98,8 @@ export function SubmissionForm({
           Ready to Start?
         </h3>
         <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
-          Click the button below to indicate your interest in this quest. You'll be able to submit
-          your work once you've completed the requirements.
+          Click the button below to indicate your interest in this quest. You&apos;ll be able to submit
+          your work once you&apos;ve completed the requirements.
         </p>
 
         {isExpired && (
@@ -130,7 +132,12 @@ export function SubmissionForm({
   }
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="relative rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <LoadingOverlay
+        isOpen={isSubmitting}
+        message="Submitting your proof..."
+        blockInteraction
+      />
       <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
         Submit Your Work
       </h3>
@@ -217,19 +224,7 @@ export function SubmissionForm({
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
-                <svg
-                  className="h-5 w-5 animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
+                <LoadingSpinner size="sm" variant="white" label="Submitting work" />
                 Submitting...
               </span>
             ) : (

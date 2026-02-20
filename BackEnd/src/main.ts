@@ -1,48 +1,10 @@
-// import { NestFactory } from '@nestjs/core';
-// import { ValidationPipe } from '@nestjs/common';
-// import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-// import { AppModule } from './app.module';
-
-// async function bootstrap() {
-//   const app = await NestFactory.create(AppModule);
-
-//   app.enableCors({
-//     origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
-//     credentials: true,
-//   });
-
-//   app.useGlobalPipes(
-//     new ValidationPipe({
-//       whitelist: true,
-//       forbidNonWhitelisted: true,
-//       transform: true,
-//     }),
-//   );
-
-//   const config = new DocumentBuilder()
-//     .setTitle('StellarEarn API')
-//     .setDescription('Quest-based earning platform on Stellar blockchain')
-//     .setVersion('1.0')
-//     .addBearerAuth()
-//     .addTag('Authentication')
-//     .build();
-
-//   const document = SwaggerModule.createDocument(app, config);
-//   SwaggerModule.setup('api/docs', app, document);
-
-//   const port = process.env.PORT || 3001;
-//   await app.listen(port);
-//   console.log(`🚀 Application is running on: http://localhost:${port}`);
-//   console.log(
-//     `📚 Swagger docs available at: http://localhost:${port}/api/docs`,
-//   );
-// }
-// bootstrap();
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
+import { VersioningType } from '@nestjs/common';
+import { setupSwagger } from './config/swagger.config';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { CustomValidationPipe } from './common/pipes/validation.pipe';
@@ -117,20 +79,14 @@ async function bootstrap() {
 
     console.log('✅ Middleware configured');
 
-    // Swagger
-    const config = new DocumentBuilder()
-      .setTitle('StellarEarn API')
-      .setDescription('Quest-based earning platform on Stellar blockchain')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .addTag('Authentication')
-      .addTag('Health', 'System health and readiness probes')
-      .build();
+    // API versioning and global prefix
+    app.setGlobalPrefix('api');
+    app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
+    // Swagger (centralized setup)
+    setupSwagger(app, configService);
 
-    console.log('✅ Swagger configured');
+    console.log('✅ Swagger configured and versioning enabled');
 
     // Terminus handles SIGTERM/SIGINT: marks health checks unhealthy first,
     // drains in-flight requests, then closes the app cleanly.

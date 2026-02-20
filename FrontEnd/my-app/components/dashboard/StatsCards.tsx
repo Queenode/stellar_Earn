@@ -1,6 +1,7 @@
 'use client';
 
 import type { UserStats } from '@/lib/types/dashboard';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface StatsCardsProps {
   stats: UserStats | null;
