@@ -144,9 +144,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main id="main-content" className="p-6 lg:p-8">
-          {children}
-        </main>
+        <main className="p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

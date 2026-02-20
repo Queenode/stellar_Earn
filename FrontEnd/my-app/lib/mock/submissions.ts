@@ -1,6 +1,15 @@
 import { SubmissionStatus } from '../types/submission';
 import type { Submission } from '../types/submission';
 
+function deterministicHash(seed: number): string {
+  return `0x${seed.toString(16).padStart(64, '0')}`;
+}
+
+function deterministicReward(seed: number): number {
+  // 50..249 deterministic range, avoids SSR/client mismatch from Math.random.
+  return 50 + ((seed * 37) % 200);
+}
+
 export const mockSubmissions: Submission[] = [
   {
     id: 'SUB-001',
@@ -89,14 +98,14 @@ export const mockSubmissions: Submission[] = [
     questId: `quest-${i + 6}`,
     userId: 'user-001',
     status: SubmissionStatus.APPROVED,
-    proof: { hash: `0x${Math.random().toString(16).substring(2, 66)}` },
+    proof: { hash: deterministicHash(i + 6) },
     createdAt: new Date(2024, 0, 10 - i).toISOString(),
     updatedAt: new Date(2024, 0, 10 - i).toISOString(),
     quest: {
       id: `quest-${i + 6}`,
       title: `Quest ${i + 6}`,
       description: `Description for quest ${i + 6}`,
-      rewardAmount: Math.floor(Math.random() * 200) + 50,
+      rewardAmount: deterministicReward(i + 6),
       rewardAsset: 'XLM',
     },
   })),
