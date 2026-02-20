@@ -1,8 +1,47 @@
 #[cfg(test)]
 mod tests {
-    use soroban_sdk::{symbol_short, testutils::Address as _, Address, BytesN, Env};
+    use soroban_sdk::{
+        symbol_short,
+        testutils::Address as _,
+        token::{Client as TokenClient, StellarAssetClient},
+        Address, BytesN, Env, Symbol,
+    };
 
     use crate::{types::QuestStatus, EarnQuestContract, EarnQuestContractClient};
+
+    fn setup_token(env: &Env) -> (Address, StellarAssetClient<'_>, TokenClient<'_>) {
+        let admin = Address::generate(env);
+        let address = env.register_stellar_asset_contract_v2(admin.clone()).address();
+        let admin_client = StellarAssetClient::new(env, &address);
+        let client = TokenClient::new(env, &address);
+        (address, admin_client, client)
+    }
+
+    fn register_and_fund(
+        _env: &Env,
+        client: &EarnQuestContractClient,
+        quest_id: &Symbol,
+        creator: &Address,
+        token_address: &Address,
+        token_admin_client: &StellarAssetClient,
+        reward: i128,
+        verifier: &Address,
+        deadline: u64,
+        max_participants: u32,
+    ) {
+        let total = reward * (max_participants as i128);
+        token_admin_client.mint(creator, &total);
+        client.register_quest(
+            quest_id,
+            creator,
+            token_address,
+            &reward,
+            verifier,
+            &deadline,
+            &max_participants,
+        );
+        client.deposit_escrow(quest_id, creator, &total);
+    }
 
     #[test]
     fn test_register_quest_with_participant_limit() {
@@ -16,7 +55,6 @@ mod tests {
         let verifier = Address::generate(&env);
         let reward_asset = Address::generate(&env);
 
-        // Register quest with max_participants = 5
         client.register_quest(
             &symbol_short!("Q001"),
             &creator,
@@ -27,7 +65,6 @@ mod tests {
             &5,
         );
 
-        // Verify quest was created
         let quest = client.get_quest(&symbol_short!("Q001"));
         assert_eq!(quest.max_participants, 5);
         assert_eq!(quest.total_claims, 0);
@@ -45,7 +82,6 @@ mod tests {
         let verifier = Address::generate(&env);
         let reward_asset = Address::generate(&env);
 
-        // Should fail with InvalidParticipantLimit
         let result = client.try_register_quest(
             &symbol_short!("Q002"),
             &creator,
@@ -69,33 +105,25 @@ mod tests {
 
         let creator = Address::generate(&env);
         let verifier = Address::generate(&env);
-        let reward_asset = Address::generate(&env);
+        let (token_address, token_admin_client, _token_client) = setup_token(&env);
+        let quest_id = symbol_short!("QLIMIT");
 
-        // Register quest with max_participants = 2
-        client.register_quest(
-            &symbol_short!("QLIMIT"),
-            &creator,
-            &reward_asset,
-            &1000,
-            &verifier,
-            &9999999999,
-            &2,
+        register_and_fund(
+            &env, &client, &quest_id, &creator, &token_address,
+            &token_admin_client, 1000, &verifier, 9999999999, 2,
         );
 
-        // Submit and approve 2 submissions
         for i in 1..=2 {
             let submitter = Address::generate(&env);
             let proof = BytesN::from_array(&env, &[i; 32]);
-            client.submit_proof(&symbol_short!("QLIMIT"), &submitter, &proof);
-            client.approve_submission(&symbol_short!("QLIMIT"), &submitter, &verifier);
+            client.submit_proof(&quest_id, &submitter, &proof);
+            client.approve_submission(&quest_id, &submitter, &verifier);
         }
 
-        // Verify quest is full
-        let is_full = client.is_quest_full(&symbol_short!("QLIMIT"));
+        let is_full = client.is_quest_full(&quest_id);
         assert!(is_full);
 
-        // Verify quest status is Completed
-        let quest = client.get_quest(&symbol_short!("QLIMIT"));
+        let quest = client.get_quest(&quest_id);
         assert_eq!(quest.status, QuestStatus::Completed);
     }
 
@@ -109,29 +137,22 @@ mod tests {
 
         let creator = Address::generate(&env);
         let verifier = Address::generate(&env);
-        let reward_asset = Address::generate(&env);
+        let (token_address, token_admin_client, _token_client) = setup_token(&env);
+        let quest_id = symbol_short!("QFULL");
 
-        // Register quest with max_participants = 1
-        client.register_quest(
-            &symbol_short!("QFULL"),
-            &creator,
-            &reward_asset,
-            &1000,
-            &verifier,
-            &9999999999,
-            &1,
+        register_and_fund(
+            &env, &client, &quest_id, &creator, &token_address,
+            &token_admin_client, 1000, &verifier, 9999999999, 1,
         );
 
-        // Submit and approve 1 submission
         let submitter1 = Address::generate(&env);
         let proof1 = BytesN::from_array(&env, &[1u8; 32]);
-        client.submit_proof(&symbol_short!("QFULL"), &submitter1, &proof1);
-        client.approve_submission(&symbol_short!("QFULL"), &submitter1, &verifier);
+        client.submit_proof(&quest_id, &submitter1, &proof1);
+        client.approve_submission(&quest_id, &submitter1, &verifier);
 
-        // Try to submit another (should fail with QuestFull or QuestNotActive)
         let submitter2 = Address::generate(&env);
         let proof2 = BytesN::from_array(&env, &[2u8; 32]);
-        let result = client.try_submit_proof(&symbol_short!("QFULL"), &submitter2, &proof2);
+        let result = client.try_submit_proof(&quest_id, &submitter2, &proof2);
         assert!(result.is_err());
     }
 
@@ -145,32 +166,24 @@ mod tests {
 
         let creator = Address::generate(&env);
         let verifier = Address::generate(&env);
-        let reward_asset = Address::generate(&env);
+        let (token_address, token_admin_client, _token_client) = setup_token(&env);
+        let quest_id = symbol_short!("QCOUNT");
 
-        // Register quest
-        client.register_quest(
-            &symbol_short!("QCOUNT"),
-            &creator,
-            &reward_asset,
-            &500,
-            &verifier,
-            &9999999999,
-            &5,
+        register_and_fund(
+            &env, &client, &quest_id, &creator, &token_address,
+            &token_admin_client, 500, &verifier, 9999999999, 5,
         );
 
-        // Verify initial count
-        let quest = client.get_quest(&symbol_short!("QCOUNT"));
+        let quest = client.get_quest(&quest_id);
         assert_eq!(quest.total_claims, 0);
 
-        // Approve 3 submissions
         for i in 1..=3 {
             let submitter = Address::generate(&env);
             let proof = BytesN::from_array(&env, &[i; 32]);
-            client.submit_proof(&symbol_short!("QCOUNT"), &submitter, &proof);
-            client.approve_submission(&symbol_short!("QCOUNT"), &submitter, &verifier);
+            client.submit_proof(&quest_id, &submitter, &proof);
+            client.approve_submission(&quest_id, &submitter, &verifier);
 
-            // Verify counter incremented
-            let quest = client.get_quest(&symbol_short!("QCOUNT"));
+            let quest = client.get_quest(&quest_id);
             assert_eq!(quest.total_claims, i as u32);
         }
     }
@@ -185,26 +198,19 @@ mod tests {
 
         let creator = Address::generate(&env);
         let verifier = Address::generate(&env);
-        let reward_asset = Address::generate(&env);
         let submitter = Address::generate(&env);
+        let (token_address, token_admin_client, _token_client) = setup_token(&env);
+        let quest_id = symbol_short!("QREP");
 
-        // Register quest
-        client.register_quest(
-            &symbol_short!("QREP"),
-            &creator,
-            &reward_asset,
-            &1000,
-            &verifier,
-            &9999999999,
-            &10,
+        register_and_fund(
+            &env, &client, &quest_id, &creator, &token_address,
+            &token_admin_client, 1000, &verifier, 9999999999, 10,
         );
 
-        // Submit and approve
         let proof = BytesN::from_array(&env, &[1u8; 32]);
-        client.submit_proof(&symbol_short!("QREP"), &submitter, &proof);
-        client.approve_submission(&symbol_short!("QREP"), &submitter, &verifier);
+        client.submit_proof(&quest_id, &submitter, &proof);
+        client.approve_submission(&quest_id, &submitter, &verifier);
 
-        // Check user stats
         let stats = client.get_user_stats(&submitter);
         assert_eq!(stats.total_xp, 100);
         assert_eq!(stats.quests_completed, 1);
