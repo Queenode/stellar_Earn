@@ -7,6 +7,8 @@ import { VersioningType } from '@nestjs/common';
 import { setupSwagger } from './config/swagger.config';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { JobsService } from './modules/jobs/jobs.service';
+import { createBullBoardRouter } from './modules/jobs/jobs.board';
 import { CustomValidationPipe } from './common/pipes/validation.pipe';
 import { SanitizationPipe } from './common/pipes/sanitization.pipe';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
@@ -85,6 +87,18 @@ async function bootstrap() {
 
     // Swagger (centralized setup)
     setupSwagger(app, configService);
+
+      // Mount Bull Board (job monitoring) if JobsModule is present
+      try {
+        const jobsService = app.get(JobsService);
+        const bullRouter = createBullBoardRouter(jobsService as JobsService);
+        // mount at /admin/queues
+        app.use('/admin/queues', bullRouter);
+        // eslint-disable-next-line no-console
+        console.log('✅ Bull Board mounted at /admin/queues');
+      } catch (err) {
+        // JobsModule not available or failed to initialize; skip mounting
+      }
 
     console.log('✅ Swagger configured and versioning enabled');
 
