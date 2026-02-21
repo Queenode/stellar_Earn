@@ -15,6 +15,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { SubmissionsModule } from './modules/submissions/submissions.module';
 // import { StellarModule } from './modules/stellar/stellar.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { JobsModule } from './modules/jobs/jobs.module';
 import Datasource from './config/ormconfig';
 import { AnalyticsSnapshot } from './modules/analytics/entities/analytics-snapshot.entity';
 // import { AnalyticsUser } from './modules/analytics/entities/analytics-user.entity';
@@ -83,6 +84,7 @@ import { AppThrottlerGuard } from './common/guards/throttler.guard';
     SubmissionsModule,
     // StellarModule,
     NotificationsModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [
