@@ -19,6 +19,7 @@ mod tests {
         (address, admin_client, client)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn register_and_fund(
         _env: &Env,
         client: &EarnQuestContractClient,
