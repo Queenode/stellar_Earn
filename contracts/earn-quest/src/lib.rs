@@ -13,8 +13,8 @@ mod quest;
 mod submission;
 
 use crate::errors::Error;
-use crate::types::{Badge, UserStats};
-use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Symbol};
+use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, UserStats};
+use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Symbol, Vec};
 
 #[contract]
 pub struct EarnQuestContract;
@@ -69,6 +69,20 @@ impl EarnQuestContract {
         )
     }
 
+    /// Register multiple quests in one transaction (gas-optimized).
+    /// Creator must authorize; all quests are registered to that creator.
+    /// Batch size is limited; on first error the entire batch reverts.
+    pub fn register_quests_batch(
+        env: Env,
+        creator: Address,
+        quests: Vec<BatchQuestInput>,
+    ) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        creator.require_auth();
+
+        quest::register_quests_batch(&env, &creator, &quests)
+    }
+
     /// Submit proof with input validation
     pub fn submit_proof(
         env: Env,
@@ -93,6 +107,20 @@ impl EarnQuestContract {
         verifier.require_auth();
 
         submission::approve_submission(&env, &quest_id, &submitter, &verifier)
+    }
+
+    /// Approve multiple submissions in one transaction (gas-optimized).
+    /// Verifier must authorize; all items must be for quests where this address is verifier.
+    /// Batch size is limited; on first error the entire batch reverts.
+    pub fn approve_submissions_batch(
+        env: Env,
+        verifier: Address,
+        submissions: Vec<BatchApprovalInput>,
+    ) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        verifier.require_auth();
+
+        submission::approve_submissions_batch(&env, &verifier, &submissions)
     }
 
     /// Claim approved reward with full validation

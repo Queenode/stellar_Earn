@@ -29,6 +29,7 @@ import { CacheModule } from './modules/cache/cache.module';
 import { HealthModule } from './modules/health/health.module';
 import { throttlerConfig } from './config/throttler.config';
 import { AppThrottlerGuard } from './common/guards/throttler.guard';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AppThrottlerGuard } from './common/guards/throttler.guard';
       enableInterceptor: true,
       enableErrorFilter: true,
     }),
+    EventsModule,
     WebhooksModule,
     CacheModule,
     ConfigModule.forRoot({
