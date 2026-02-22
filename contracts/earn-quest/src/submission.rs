@@ -1,9 +1,9 @@
 use crate::errors::Error;
 use crate::events;
 use crate::storage;
-use crate::types::{Submission, SubmissionStatus};
+use crate::types::{BatchApprovalInput, Submission, SubmissionStatus};
 use crate::validation;
-use soroban_sdk::{Address, BytesN, Env, Symbol};
+use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
 
 /// Submit proof for a quest with full input validation.
 ///
@@ -103,6 +103,40 @@ pub fn validate_claim(
 
     // Validate quest claims limit
     validation::validate_quest_claims_limit(quest.total_claims)?;
+
+    Ok(())
+}
+
+//================================================================================
+// Batch approval (gas-optimized)
+//================================================================================
+
+/// Approve multiple submissions in a single transaction.
+///
+/// Validates batch size, then processes each item in order. On first validation
+/// or storage error, the entire batch is reverted. Events are emitted for each
+/// successfully processed approval before the next is applied.
+///
+/// # Arguments
+/// * `env` - Contract environment
+/// * `verifier` - Must match auth; verifier for all approvals in the batch
+/// * `submissions` - List of (quest_id, submitter) to approve
+///
+/// # Returns
+/// * `Ok(())` if all submissions were approved
+/// * `Err(Error)` on first failure (e.g. Unauthorized, SubmissionNotFound)
+pub fn approve_submissions_batch(
+    env: &Env,
+    verifier: &Address,
+    submissions: &Vec<BatchApprovalInput>,
+) -> Result<(), Error> {
+    let len = submissions.len();
+    validation::validate_batch_approval_size(len)?;
+
+    for i in 0u32..len {
+        let s = submissions.get(i).unwrap();
+        approve_submission(env, &s.quest_id, &s.submitter, verifier)?;
+    }
 
     Ok(())
 }

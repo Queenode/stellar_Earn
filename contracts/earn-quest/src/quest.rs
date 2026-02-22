@@ -1,9 +1,9 @@
 use crate::errors::Error;
 use crate::events;
 use crate::storage;
-use crate::types::{Quest, QuestStatus};
+use crate::types::{BatchQuestInput, Quest, QuestStatus};
 use crate::validation;
-use soroban_sdk::{Address, Env, Symbol};
+use soroban_sdk::{Address, Env, Symbol, Vec};
 
 /// Register a new quest with full input validation.
 ///
@@ -61,6 +61,48 @@ pub fn register_quest(
         verifier.clone(),
         deadline,
     );
+
+    Ok(())
+}
+
+//================================================================================
+// Batch registration (gas-optimized)
+//================================================================================
+
+/// Register multiple quests in a single transaction.
+///
+/// Validates batch size, then processes each item in order. On first validation
+/// or storage error, the entire batch is reverted (no partial state). Events are
+/// emitted for each successfully processed quest before the next is applied.
+///
+/// # Arguments
+/// * `env` - Contract environment
+/// * `creator` - Must match auth; creator for all quests in the batch
+/// * `quests` - List of quest inputs (id, reward_asset, reward_amount, verifier, deadline)
+///
+/// # Returns
+/// * `Ok(())` if all quests were registered
+/// * `Err(Error)` on first failure (e.g. QuestAlreadyExists, ArrayTooLong)
+pub fn register_quests_batch(
+    env: &Env,
+    creator: &Address,
+    quests: &Vec<BatchQuestInput>,
+) -> Result<(), Error> {
+    let len = quests.len();
+    validation::validate_batch_quest_size(len)?;
+
+    for i in 0u32..len {
+        let q = quests.get(i).unwrap();
+        register_quest(
+            env,
+            &q.id,
+            creator,
+            &q.reward_asset,
+            q.reward_amount,
+            &q.verifier,
+            q.deadline,
+        )?;
+    }
 
     Ok(())
 }

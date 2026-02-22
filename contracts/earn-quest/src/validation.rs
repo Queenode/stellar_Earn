@@ -21,6 +21,12 @@ pub const MAX_BADGES_COUNT: u32 = 50;
 /// Maximum number of claims per quest
 pub const MAX_QUEST_CLAIMS: u32 = 10_000;
 
+/// Maximum number of quests that can be registered in a single batch call
+pub const MAX_BATCH_QUEST_REGISTRATION: u32 = 50;
+
+/// Maximum number of submissions that can be approved in a single batch call
+pub const MAX_BATCH_APPROVALS: u32 = 50;
+
 //================================================================================
 // Address Validation
 //================================================================================
@@ -275,6 +281,32 @@ pub fn validate_quest_is_active(status: &QuestStatus) -> Result<(), Error> {
 /// * `Err(Error::ArrayTooLong)` if claims >= MAX_QUEST_CLAIMS
 pub fn validate_quest_claims_limit(total_claims: u32) -> Result<(), Error> {
     if total_claims >= MAX_QUEST_CLAIMS {
+        return Err(Error::ArrayTooLong);
+    }
+    Ok(())
+}
+
+//================================================================================
+// Batch validation
+//================================================================================
+
+/// Validates that the quest registration batch size is within limits.
+pub fn validate_batch_quest_size(length: u32) -> Result<(), Error> {
+    if length == 0 {
+        return Err(Error::ArrayTooLong);
+    }
+    if length > MAX_BATCH_QUEST_REGISTRATION {
+        return Err(Error::ArrayTooLong);
+    }
+    Ok(())
+}
+
+/// Validates that the approval batch size is within limits.
+pub fn validate_batch_approval_size(length: u32) -> Result<(), Error> {
+    if length == 0 {
+        return Err(Error::ArrayTooLong);
+    }
+    if length > MAX_BATCH_APPROVALS {
         return Err(Error::ArrayTooLong);
     }
     Ok(())
