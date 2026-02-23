@@ -1,166 +1,102 @@
-import {
-  UseInterceptors,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Injectable,
-  Inject,
-} from '@nestjs/common';
-import { Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { SetMetadata, applyDecorators } from '@nestjs/common';
 
-export interface CacheDecoratorOptions {
+export const CACHE_KEY_METADATA = 'cache:key';
+export const CACHE_TTL_METADATA = 'cache:ttl';
+export const CACHE_PREFIX_METADATA = 'cache:prefix';
+export const CACHEABLE_METADATA = 'cache:cacheable';
+export const CACHE_EVICT_METADATA = 'cache:evict';
+
+export interface CacheableOptions {
+  /** Static key. Omit to auto-generate from method name + serialised args. */
+  key?: string;
+  /** TTL in seconds. Defaults to global cache TTL. */
   ttl?: number;
-  key?: string | ((args: any[]) => string);
+  /** Key namespace prefix, e.g. 'users'. */
+  prefix?: string;
+}
+
+export interface CacheEvictOptions {
+  /** Evict a single key. */
+  key?: string;
+  /** Evict all keys under this prefix. */
+  prefix?: string;
 }
 
 /**
- * Caching interceptor for method results
- * Usage: @Cacheable({ ttl: 300, key: 'quest_detail_{{id}}' })
+ * Mark a method result as cacheable.
+ * The decorated method must be inside a class that has CacheService injected as `this.cacheService`.
+ *
+ * @example
+ * @Cacheable({ prefix: 'users', ttl: 60 })
+ * async findAll(): Promise<User[]> { ... }
  */
-@Injectable()
-export class CacheableInterceptor implements NestInterceptor {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+export function Cacheable(options: CacheableOptions = {}): MethodDecorator {
+  return (target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
+    const originalMethod = descriptor.value;
 
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Promise<Observable<any>> {
-    const options: CacheDecoratorOptions = Reflect.getMetadata(
-      'cache:options',
-      context.getHandler(),
-    );
-
-    if (!options) {
-      return next.handle();
-    }
-
-    const cacheKey = this.generateCacheKey(options, context);
-    const cachedValue = await this.cacheManager.get(cacheKey);
-
-    if (cachedValue !== undefined) {
-      return of(cachedValue);
-    }
-
-    return next.handle().pipe(
-      tap(async (value) => {
-        await this.cacheManager.set(cacheKey, value, options.ttl);
-      }),
-    );
-  }
-
-  private generateCacheKey(
-    options: CacheDecoratorOptions,
-    context: ExecutionContext,
-  ): string {
-    if (typeof options.key === 'function') {
-      const args = context.getArgs();
-      return options.key(args);
-    }
-
-    if (typeof options.key === 'string') {
-      const args = context.getArgs();
-      let key = options.key;
-
-      // Simple template replacement for {{0}}, {{1}}, etc.
-      key = key.replace(/\{\{(\d+)\}\}/g, (match, index) => {
-        const argIndex = parseInt(index);
-        return args[argIndex]?.toString() || '';
-      });
-
-      // Replace {{param_name}} with value from request params
-      const request = context.switchToHttp().getRequest();
-      if (request.params) {
-        Object.keys(request.params).forEach((param) => {
-          key = key.replace(`{{${param}}}`, request.params[param]);
-        });
+    descriptor.value = async function (...args: unknown[]) {
+      const cacheService = (this as any).cacheService;
+      if (!cacheService) {
+        // No cache service available; call through
+        return originalMethod.apply(this, args);
       }
 
-      return key;
-    }
+      const key =
+        options.key ?? `${String(propertyKey)}:${JSON.stringify(args)}`;
 
-    return `cache_${Date.now()}`;
-  }
-}
+      return cacheService.wrap(key, () => originalMethod.apply(this, args), options.ttl, options.prefix);
+    };
 
-/**
- * Decorator for caching method results
- * @example
- * @Cacheable({ ttl: 300, key: 'quests_{{status}}' })
- * async findByStatus(status: string) { ... }
- */
-export function Cacheable(options: CacheDecoratorOptions) {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor,
-  ) {
-    Reflect.defineMetadata('cache:options', options, descriptor.value);
-    UseInterceptors(CacheableInterceptor)(target, propertyKey, descriptor);
     return descriptor;
   };
 }
 
 /**
- * Invalidate cache by key pattern
- * Usage at method level to invalidate cache after mutations
- */
-@Injectable()
-export class CacheInvalidateInterceptor implements NestInterceptor {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
-
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Promise<Observable<any>> {
-    const patterns: string[] = Reflect.getMetadata(
-      'cache:invalidate',
-      context.getHandler(),
-    );
-
-    if (!patterns) {
-      return next.handle();
-    }
-
-    return next.handle().pipe(
-      tap(async () => {
-        try {
-          const keys = await (this.cacheManager as any).store?.getKeys?.();
-          if (keys) {
-            const keysToInvalidate = keys.filter((key: string) =>
-              patterns.some((pattern) => key.startsWith(pattern)),
-            );
-            await Promise.all(
-              keysToInvalidate.map((key: string) =>
-                this.cacheManager.del(key),
-              ),
-            );
-          }
-        } catch (error) {
-          console.warn('Cache invalidation error:', error);
-          // Continue without caching
-        }
-      }),
-    );
-  }
-}
-
-/**
- * Decorator for invalidating cache after mutations
+ * Evict one key or all keys under a prefix after the method executes successfully.
+ *
  * @example
- * @CacheInvalidate(['quests_', 'quest_detail_'])
- * async updateQuest(id: string, dto: UpdateQuestDto) { ... }
+ * @CacheEvict({ prefix: 'users' })
+ * async update(id: number, dto: UpdateUserDto): Promise<User> { ... }
  */
-export function CacheInvalidate(patterns: string[]) {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor,
-  ) {
-    Reflect.defineMetadata('cache:invalidate', patterns, descriptor.value);
-    UseInterceptors(CacheInvalidateInterceptor)(target, propertyKey, descriptor);
+export function CacheEvict(options: CacheEvictOptions): MethodDecorator {
+  return (target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
+    const originalMethod = descriptor.value;
+
+    descriptor.value = async function (...args: unknown[]) {
+      const result = await originalMethod.apply(this, args);
+
+      const cacheService = (this as any).cacheService;
+      if (!cacheService) return result;
+
+      if (options.prefix) {
+        await cacheService.invalidatePrefix(options.prefix);
+      } else if (options.key) {
+        await cacheService.delete(options.key);
+      }
+
+      return result;
+    };
+
     return descriptor;
   };
 }
+
+/**
+ * Convenience metadata decorators used by CacheInterceptor for controller-level caching.
+ */
+export const CacheKey = (key: string) => SetMetadata(CACHE_KEY_METADATA, key);
+export const CacheTTL = (ttl: number) => SetMetadata(CACHE_TTL_METADATA, ttl);
+export const CachePrefix = (prefix: string) => SetMetadata(CACHE_PREFIX_METADATA, prefix);
+
+/**
+ * Combined decorator for controller routes.
+ * @example
+ * @UseInterceptors(CacheInterceptor)
+ * @RouteCache({ key: 'products-list', ttl: 120, prefix: 'products' })
+ */
+// export function RouteCache(options: CacheableOptions = {}) {
+//   const decorators = [];
+//   if (options.key) decorators.push(CacheKey(options.key));
+//   if (options.ttl) decorators.push(CacheTTL(options.ttl));
+//   if (options.prefix) decorators.push(CachePrefix(options.prefix));
+//   return applyDecorators(...decorators);
