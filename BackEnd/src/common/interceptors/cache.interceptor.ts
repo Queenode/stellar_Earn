@@ -3,26 +3,29 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  Inject,
+  Logger,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 import { Request } from 'express';
+import { CacheService } from '../../modules/cache/cache.service';
+import {
+  CACHE_KEY_METADATA,
+  CACHE_TTL_METADATA,
+  CACHE_PREFIX_METADATA,
+} from '../decorators/cache.decorator';
 
-/**
- * Global cache interceptor for GET requests
- * Caches responses based on URL and query parameters
- */
 @Injectable()
-export class CacheInterceptor implements NestInterceptor {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+export class HttpCacheInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(HttpCacheInterceptor.name);
 
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Promise<Observable<any>> {
+  constructor(
+    private readonly cacheService: CacheService,
+    private readonly reflector: Reflector,
+  ) {}
+
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const request = context.switchToHttp().getRequest<Request>();
 
     // Only cache GET requests
@@ -30,47 +33,35 @@ export class CacheInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    // Skip caching for requests with cache control headers
-    if (request.headers['cache-control']?.includes('no-cache')) {
-      return next.handle();
-    }
+    const customKey = this.reflector.getAllAndOverride<string>(CACHE_KEY_METADATA, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-    // Skip caching if user is authenticated with cache-bypass header
-    if (request.headers['x-cache-bypass'] === 'true') {
-      return next.handle();
-    }
+    const ttl = this.reflector.getAllAndOverride<number>(CACHE_TTL_METADATA, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-    const cacheKey = this.generateCacheKey(request);
+    const prefix = this.reflector.getAllAndOverride<string>(CACHE_PREFIX_METADATA, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-    try {
-      const cachedValue = await this.cacheManager.get(cacheKey);
-      if (cachedValue !== undefined) {
-        return of(cachedValue);
-      }
-    } catch (error) {
-      // Log error but don't fail the request
-      console.warn('Cache get error:', error);
+    // Key: custom > route URL (includes query string)
+    const cacheKey = customKey ?? `route:${request.url}`;
+
+    const cached = await this.cacheService.get(cacheKey, prefix);
+    if (cached !== null) {
+      this.logger.debug(`Route cache HIT: ${cacheKey}`);
+      return of(cached);
     }
 
     return next.handle().pipe(
-      tap(async (value) => {
-        try {
-          // Default TTL is 5 minutes for GET requests
-          await this.cacheManager.set(cacheKey, value, 300000);
-        } catch (error) {
-          // Log error but don't fail the request
-          console.warn('Cache set error:', error);
-        }
+      tap(async (response) => {
+        await this.cacheService.set(cacheKey, response, ttl, prefix);
+        this.logger.debug(`Route cache SET: ${cacheKey}`);
       }),
     );
-  }
-
-  private generateCacheKey(request: Request): string {
-    const { url, headers } = request;
-    const userId = (headers['user-id'] as string) || 'anonymous';
-
-    // Create a cache key from URL, user ID, and query parameters
-    const queryString = new URLSearchParams(request.query as any).toString();
-    return `${userId}:${url}${queryString ? `?${queryString}` : ''}`;
   }
 }
