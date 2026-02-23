@@ -59,3 +59,28 @@ pub enum Badge {
     Master,
     Legend,
 }
+
+//================================================================================
+// Batch operation input types (gas-optimized multi-item operations)
+//================================================================================
+
+/// Single quest registration input for batch registration.
+/// Creator is implied from auth in register_quests_batch.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BatchQuestInput {
+    pub id: Symbol,
+    pub reward_asset: Address,
+    pub reward_amount: i128,
+    pub verifier: Address,
+    pub deadline: u64,
+}
+
+/// Single approval input for batch approval.
+/// Verifier is implied from auth in approve_submissions_batch.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BatchApprovalInput {
+    pub quest_id: Symbol,
+    pub submitter: Address,
+}

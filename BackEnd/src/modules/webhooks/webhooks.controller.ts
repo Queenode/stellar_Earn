@@ -11,11 +11,19 @@ import {
   Param,
 } from '@nestjs/common';
 import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
+import {
   WebhooksService,
   WebhookEvent,
   WebhookResponse,
 } from './webhooks.service';
 
+@ApiTags('Webhooks')
 @Controller('webhooks')
 export class WebhooksController {
   private readonly logger = new Logger(WebhooksController.name);
@@ -28,6 +36,12 @@ export class WebhooksController {
    */
   @Post('github')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Receive GitHub webhook events' })
+  @ApiConsumes('application/json')
+  @ApiBody({ schema: { type: 'object' } })
+  @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid webhook payload' })
+  @ApiResponse({ status: 401, description: 'Unauthorized or invalid signature' })
   async handleGithubWebhook(
     @Body() payload: any,
     @Headers('x-github-event') eventType: string,
@@ -81,6 +95,12 @@ export class WebhooksController {
    */
   @Post('api-verify')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'API verification webhook endpoint' })
+  @ApiConsumes('application/json')
+  @ApiBody({ schema: { type: 'object' } })
+  @ApiResponse({ status: 200, description: 'Verification processed' })
+  @ApiResponse({ status: 400, description: 'Invalid webhook headers or payload' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async handleApiVerificationWebhook(
     @Body() payload: any,
     @Headers('x-event-type') eventType: string,
@@ -140,6 +160,11 @@ export class WebhooksController {
    */
   @Post('generic/:service')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Generic webhook receiver for external services' })
+  @ApiConsumes('application/json')
+  @ApiBody({ schema: { type: 'object' } })
+  @ApiResponse({ status: 200, description: 'Webhook processed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async handleGenericWebhook(
     @Body() payload: any,
     @Headers() headers: any,
@@ -178,6 +203,8 @@ export class WebhooksController {
    */
   @Post('health')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Webhook-specific health check' })
+  @ApiResponse({ status: 200, description: 'Service healthy' })
   async healthCheck(): Promise<{ status: string; timestamp: Date }> {
     return {
       status: 'ok',

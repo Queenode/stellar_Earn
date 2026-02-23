@@ -7,6 +7,8 @@ import { UserMenu } from "@/components/layout/UserMenu";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { ConnectButton } from "@/components/wallet/ConnectButton";
 import { WalletModal } from "@/components/wallet/WalletModal";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { isActiveRoute, navigationItems } from "@/lib/config/navigation";
 
 interface HeaderProps {
@@ -17,7 +19,7 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95">
+    <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/60 dark:border-zinc-800 dark:bg-zinc-950/95 dark:supports-backdrop-filter:bg-zinc-900/60">
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
         <button
           aria-label="Open mobile menu"
@@ -56,7 +58,12 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
           })}
         </div>
 
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <div className="ml-auto flex flex-1 items-center gap-2 sm:gap-3 sm:max-w-2xl" data-onboarding="global-search">
+          <GlobalSearch />
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <NotificationBell />
           <div className="hidden md:block">
             <ConnectButton />

@@ -38,7 +38,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             onClose={() => setIsMobileMenuOpen(false)}
             pathname={pathname}
           />
-          <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+          <main id="main-content" className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
             {children}
           </main>
         </div>

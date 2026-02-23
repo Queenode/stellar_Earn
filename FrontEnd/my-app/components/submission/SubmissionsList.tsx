@@ -2,6 +2,7 @@
 
 import { SubmissionCard } from './SubmissionCard';
 import type { Submission } from '@/lib/types/submission';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface SubmissionsListProps {
   submissions: Submission[];
@@ -11,25 +12,7 @@ interface SubmissionsListProps {
 }
 
 function LoadingSkeleton() {
-  return (
-    <div className="space-y-4">
-      {[...Array(3)].map((_, i) => (
-        <div
-          key={i}
-          className="animate-pulse rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 space-y-3">
-              <div className="h-5 w-3/4 rounded bg-zinc-200 dark:bg-zinc-800" />
-              <div className="h-4 w-full rounded bg-zinc-200 dark:bg-zinc-800" />
-              <div className="h-4 w-2/3 rounded bg-zinc-200 dark:bg-zinc-800" />
-            </div>
-            <div className="h-6 w-20 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return <Skeleton.List items={3} />;
 }
 
 function EmptyState() {
@@ -53,7 +36,7 @@ function EmptyState() {
         No submissions found
       </h3>
       <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-        You haven't submitted any quests yet. Start completing quests to see
+        You haven&apos;t submitted any quests yet. Start completing quests to see
         your submissions here.
       </p>
     </div>

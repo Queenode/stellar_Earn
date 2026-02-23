@@ -1,6 +1,8 @@
 'use client';
 
 import type { ProfileStats } from '@/lib/types/profile';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface ProfileStatsProps {
   stats: ProfileStats;
@@ -14,8 +16,8 @@ export function ProfileStats({ stats, isLoading }: ProfileStatsProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[...Array(4)].map((_, index) => (
             <div key={index} className="text-center">
-              <div className="h-8 bg-zinc-800 rounded w-3/4 mx-auto mb-2 animate-pulse" />
-              <div className="h-4 bg-zinc-800 rounded w-1/2 mx-auto animate-pulse" />
+              <Skeleton.Text className="mx-auto mb-2 h-8 w-3/4 bg-zinc-800 dark:bg-zinc-800" />
+              <Skeleton.Text className="mx-auto h-4 w-1/2 bg-zinc-800 dark:bg-zinc-800" />
             </div>
           ))}
         </div>
@@ -97,12 +99,7 @@ export function ProfileStats({ stats, isLoading }: ProfileStatsProps) {
           <span className="text-sm text-zinc-400">Progress to Level {stats.level + 1}</span>
           <span className="text-sm text-zinc-300">65% Complete</span>
         </div>
-        <div className="w-full bg-zinc-800 rounded-full h-2">
-          <div 
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full" 
-            style={{ width: '65%' }}
-          ></div>
-        </div>
+        <ProgressBar value={65} max={100} />
         <div className="flex justify-between text-xs text-zinc-500 mt-1">
           <span>Level {stats.level}</span>
           <span>Level {stats.level + 1}</span>
