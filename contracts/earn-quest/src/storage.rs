@@ -28,6 +28,7 @@ pub enum DataKey {
     UnpauseTimelockSeconds,
     /// Scheduled unpause ledger timestamp
     ScheduledUnpauseTime,
+    Escrow(Symbol),
 }
 
 //================================================================================
@@ -654,4 +655,30 @@ fn dec_unpause_approval_count(env: &Env) {
         cur -= 1;
     }
     env.storage().instance().set(&DataKey::UnpauseApprovalCount, &cur);
+}
+
+//================================================================================
+// Escrow Storage Functions
+//================================================================================
+
+/// Check if escrow exists for a quest
+pub fn has_escrow(env: &Env, quest_id: &Symbol) -> bool {
+    env.storage()
+        .instance()
+        .has(&DataKey::Escrow(quest_id.clone()))
+}
+
+/// Get escrow info for a quest
+pub fn get_escrow(env: &Env, quest_id: &Symbol) -> Result<EscrowInfo, Error> {
+    env.storage()
+        .instance()
+        .get(&DataKey::Escrow(quest_id.clone()))
+        .ok_or(Error::EscrowNotFound)
+}
+
+/// Save escrow info for a quest
+pub fn set_escrow(env: &Env, quest_id: &Symbol, escrow: &EscrowInfo) {
+    env.storage()
+        .instance()
+        .set(&DataKey::Escrow(quest_id.clone()), escrow);
 }

@@ -4,6 +4,7 @@ use crate::storage;
 use crate::types::{BatchApprovalInput, Submission, SubmissionStatus};
 use crate::validation;
 use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
+use crate::storage;  // already imported
 
 /// Submit proof for a quest with full input validation.
 ///
@@ -67,6 +68,18 @@ pub fn approve_submission(
         &submission.status,
         &SubmissionStatus::Approved,
     )?;
+
+    // ═══════════════════════════════════════════════════════
+    // ADD THIS BLOCK — escrow check before approval
+    // ═══════════════════════════════════════════════════════
+    //
+    // If this quest has escrow, verify there are enough
+    // funds to pay this person BEFORE we approve them.
+    // This prevents approving someone we can't pay.
+    if storage::has_escrow(env, quest_id) {
+        crate::escrow::validate_sufficient(env, quest_id, quest.reward_amount)?;
+    }
+    // ═══════════════════════════════════════════════════════
 
     storage::update_submission_status(env, quest_id, submitter, SubmissionStatus::Approved)?;
 

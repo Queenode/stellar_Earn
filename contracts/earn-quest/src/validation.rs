@@ -216,6 +216,8 @@ pub fn validate_quest_status_transition(
         (QuestStatus::Active, QuestStatus::Expired) => true,
         (QuestStatus::Paused, QuestStatus::Active) => true,
         (QuestStatus::Paused, QuestStatus::Expired) => true,
+        (QuestStatus::Active, QuestStatus::Cancelled) => true,
+        (QuestStatus::Paused, QuestStatus::Cancelled) => true,
         _ => false,
     };
 
@@ -310,4 +312,12 @@ pub fn validate_batch_approval_size(length: u32) -> Result<(), Error> {
         return Err(Error::ArrayTooLong);
     }
     Ok(())
+}
+
+/// Check if a quest is in a terminal state (no more activity possible)
+pub fn is_quest_terminal(status: &QuestStatus) -> bool {
+    matches!(
+        status,
+        QuestStatus::Completed | QuestStatus::Expired | QuestStatus::Cancelled
+    )
 }
