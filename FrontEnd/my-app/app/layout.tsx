@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AppLayout } from "@/components/layout/AppLayout";
 import "./globals.css";
 import { ToastProvider } from "@/components/notifications/Toast";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
@@ -59,7 +60,7 @@ export default function RootLayout({
               <AnalyticsProvider>
                 <ToastProvider>
                   <SkipToContent />
-                  {children}
+                  <AppLayout>{children}</AppLayout>
                   <ConsentBanner />
                   <WalletModal />
                 </ToastProvider>
