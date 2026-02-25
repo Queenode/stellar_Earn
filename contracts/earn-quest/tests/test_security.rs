@@ -71,6 +71,24 @@ fn test_emergency_withdraw_when_paused() {
 }
 
 #[test]
+fn test_emergency_withdraw_fails_when_not_paused() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (_, client) = setup_contract(&env);
+    let admin = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_contract_obj = env.register_stellar_asset_contract_v2(token_admin.clone());
+    let token_contract = token_contract_obj.address();
+
+    client.initialize(&admin);
+
+    // Try to withdraw without pausing
+    let result = client.try_emergency_withdraw(&admin, &token_contract, &admin, &500);
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_multisig_approve_and_unpause_with_zero_timelock() {
     let env = Env::default();
     env.mock_all_auths();
@@ -136,5 +154,38 @@ fn test_unpause_requires_enough_approvals() {
     client.emergency_approve_unpause(&admin1);
 
     // Unpause should fail with InsufficientApprovals
+    client.emergency_unpause(&admin1);
+}
+#[test]
+fn test_approvals_cleared_after_unpause() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (_, client) = setup_contract(&env);
+    let admin1 = Address::generate(&env);
+    let admin2 = Address::generate(&env);
+
+    client.initialize(&admin1);
+    client.add_admin(&admin1, &admin2);
+
+    client.set_unpause_threshold(&admin1, &2u32);
+    client.set_unpause_timelock(&admin1, &0u64);
+
+    // Round 1
+    client.emergency_pause(&admin1);
+    client.emergency_approve_unpause(&admin1);
+    client.emergency_approve_unpause(&admin2);
+    client.emergency_unpause(&admin1);
+
+    // Pause again
+    client.emergency_pause(&admin1);
+
+    // Unpause should fail because previous approvals are cleared (round incremented)
+    let result = client.try_emergency_unpause(&admin1);
+    assert!(result.is_err());
+    
+    // Now approve again in new round
+    client.emergency_approve_unpause(&admin1);
+    client.emergency_approve_unpause(&admin2);
     client.emergency_unpause(&admin1);
 }

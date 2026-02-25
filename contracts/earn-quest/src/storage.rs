@@ -20,11 +20,13 @@ pub enum DataKey {
     Admin(Address),
     /// Global paused flag
     Paused,
-    /// Stores per-admin approval for unpause
-    UnpauseApproval(Address),
+    /// Stores per-admin approval for unpause in a specific round
+    UnpauseApproval(u32, Address),
     /// Number of approvals required to unpause
     UnpauseThreshold,
-    /// Count of approvals recorded
+    /// Current unpause cycle/round ID
+    UnpauseRound,
+    /// Count of approvals recorded in current round
     UnpauseApprovalCount,
     /// Timelock seconds to wait after approvals before unpause can be executed
     UnpauseTimelockSeconds,
@@ -585,28 +587,46 @@ pub fn is_paused(env: &Env) -> bool {
     env.storage().instance().has(&DataKey::Paused)
 }
 
-/// Approve or revoke unpause by admin
+/// Approve or revoke unpause by admin for the current round
 pub fn set_unpause_approval(env: &Env, admin: &Address, approved: bool) {
+    let round = get_unpause_round(env);
     if approved {
-        // If not already approved, set and increment counter
+        // If not already approved in this round, set and increment counter
         if !has_unpause_approval(env, admin) {
             env.storage()
                 .instance()
-                .set(&DataKey::UnpauseApproval(admin.clone()), &true);
+                .set(&DataKey::UnpauseApproval(round, admin.clone()), &true);
             inc_unpause_approval_count(env);
         }
-    } else if has_unpause_approval(env, admin) {
-        env.storage()
-            .instance()
-            .remove(&DataKey::UnpauseApproval(admin.clone()));
-        dec_unpause_approval_count(env);
+    } else {
+        if has_unpause_approval(env, admin) {
+            env.storage()
+                .instance()
+                .remove(&DataKey::UnpauseApproval(round, admin.clone()));
+            dec_unpause_approval_count(env);
+        }
     }
 }
 
 pub fn has_unpause_approval(env: &Env, admin: &Address) -> bool {
+    let round = get_unpause_round(env);
     env.storage()
         .instance()
-        .has(&DataKey::UnpauseApproval(admin.clone()))
+        .has(&DataKey::UnpauseApproval(round, admin.clone()))
+}
+
+pub fn get_unpause_round(env: &Env) -> u32 {
+    env.storage()
+        .instance()
+        .get(&DataKey::UnpauseRound)
+        .unwrap_or(0u32)
+}
+
+pub fn inc_unpause_round(env: &Env) {
+    let cur = get_unpause_round(env);
+    env.storage()
+        .instance()
+        .set(&DataKey::UnpauseRound, &cur.saturating_add(1));
 }
 
 pub fn count_unpause_approvals(env: &Env) -> u32 {
@@ -653,8 +673,13 @@ pub fn get_scheduled_unpause_time(env: &Env) -> Option<u64> {
 }
 
 pub fn clear_unpause_approvals(env: &Env) {
-    // There's no easy iteration to remove all UnpauseApproval keys.
-    // The higher level security module will simply leave entries; remove scheduled time and paused flag.
+    // Increment the round ID so previous approvals are effectively cleared/invalidated
+    inc_unpause_round(env);
+    // Reset the count for the new round
+    env.storage()
+        .instance()
+        .set(&DataKey::UnpauseApprovalCount, &0u32);
+    // Remove scheduled time
     env.storage()
         .instance()
         .remove(&DataKey::ScheduledUnpauseTime);
