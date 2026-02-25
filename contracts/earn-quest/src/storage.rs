@@ -18,8 +18,60 @@ pub enum DataKey {
     UserStats(Address),
     /// Stores admin status, keyed by admin address
     Admin(Address),
+    /// Stores contract admin (single)
+    ContractAdmin,
+    /// Stores contract version
+    ContractVersion,
+    /// Stores contract config params
+    ContractConfig,
+    /// Tracks initialization
+    Initialized,
     /// Global paused flag
     Paused,
+    //================================================================================
+    // Initialization & Upgradability Storage
+    //================================================================================
+
+    pub fn is_initialized(env: &Env) -> bool {
+        env.storage().instance().has(&DataKey::Initialized)
+    }
+
+    pub fn mark_initialized(env: &Env) {
+        env.storage().instance().set(&DataKey::Initialized, &true);
+    }
+
+    pub fn set_admin(env: &Env, admin: &Address) {
+        env.storage().instance().set(&DataKey::ContractAdmin, admin);
+    }
+
+    pub fn get_admin(env: &Env) -> Address {
+        env.storage()
+            .instance()
+            .get(&DataKey::ContractAdmin)
+            .expect("Admin not set")
+    }
+
+    pub fn set_version(env: &Env, version: u32) {
+        env.storage().instance().set(&DataKey::ContractVersion, &version);
+    }
+
+    pub fn get_version(env: &Env) -> u32 {
+        env.storage()
+            .instance()
+            .get(&DataKey::ContractVersion)
+            .unwrap_or(1)
+    }
+
+    pub fn set_config(env: &Env, config: &Vec<(String, String)>) {
+        env.storage().instance().set(&DataKey::ContractConfig, config);
+    }
+
+    pub fn get_config(env: &Env) -> Vec<(String, String)> {
+        env.storage()
+            .instance()
+            .get(&DataKey::ContractConfig)
+            .unwrap_or(Vec::new(&env))
+    }
     /// Stores per-admin approval for unpause
     UnpauseApproval(Address),
     /// Number of approvals required to unpause
