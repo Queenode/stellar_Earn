@@ -13,24 +13,61 @@ mod submission;
 pub mod types;
 pub mod validation;
 
-main
-
 use crate::errors::Error;
 use crate::types::{
     Badge, BatchApprovalInput, BatchQuestInput, EscrowInfo, QuestMetadata, UserStats,
 };
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Symbol, Vec};
+mod init;
+
 
 #[contract]
 pub struct EarnQuestContract;
 
 #[contractimpl]
 impl EarnQuestContract {
-    /// Initialize the contract with an initial admin
-    pub fn initialize(env: Env, initial_admin: Address) -> Result<(), Error> {
-        initial_admin.require_auth();
-        storage::set_admin(&env, &initial_admin);
+    /// Initialize contract with admin, version, and config
+    pub fn initialize(
+        env: Env,
+        admin: Address,
+        version: u32,
+        config_params: Vec<(String, String)>
+    ) -> Result<(), Error> {
+        admin.require_auth();
+        if storage::is_initialized(&env) {
+            return Err(Error::AlreadyInitialized);
+        }
+        let config = init::InitConfig {
+            admin: admin.clone(),
+            version,
+            config_params,
+        };
+        init::initialize(&env, config);
         Ok(())
+    }
+
+    /// Authorize contract upgrade (admin only)
+    pub fn authorize_upgrade(env: Env, caller: Address) -> Result<(), Error> {
+        caller.require_auth();
+        if !init::upgrade_authorize(&env, &caller) {
+            return Err(Error::Unauthorized);
+        }
+        Ok(())
+    }
+
+    /// Get contract version
+    pub fn get_version(env: Env) -> u32 {
+        storage::get_version(&env)
+    }
+
+    /// Get contract admin
+    pub fn get_admin(env: Env) -> Address {
+        storage::get_admin(&env)
+    }
+
+    /// Get contract config
+    pub fn get_config(env: Env) -> Vec<(String, String)> {
+        storage::get_config(&env)
     }
 
     /// Add a new admin (admin only)

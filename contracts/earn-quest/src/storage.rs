@@ -18,6 +18,14 @@ pub enum DataKey {
     UserStats(Address),
     /// Stores admin status, keyed by admin address
     Admin(Address),
+    /// Stores contract admin (single)
+    ContractAdmin,
+    /// Stores contract version
+    ContractVersion,
+    /// Stores contract config params
+    ContractConfig,
+    /// Tracks initialization
+    Initialized,
     /// Global paused flag
     Paused,
     /// Stores per-admin approval for unpause in a specific round
