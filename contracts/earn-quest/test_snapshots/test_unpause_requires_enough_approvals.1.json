@@ -211,6 +211,9 @@
                               "symbol": "UnpauseApproval"
                             },
                             {
+                              "u32": 0
+                            },
+                            {
                               "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                             }
                           ]
