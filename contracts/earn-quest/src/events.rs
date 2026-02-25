@@ -151,3 +151,58 @@ pub fn badge_granted(
     let data = (badge,);
     env.events().publish(topics, data);
 }
+
+const TOPIC_ESCROW_DEPOSITED: Symbol = symbol_short!("esc_dep");
+const TOPIC_ESCROW_PAYOUT: Symbol = symbol_short!("esc_pay");
+const TOPIC_ESCROW_REFUNDED: Symbol = symbol_short!("esc_ref");
+const TOPIC_QUEST_CANCELLED: Symbol = symbol_short!("q_cancel");
+
+/// Emit when tokens are deposited into escrow
+pub fn escrow_deposited(
+    env: &Env,
+    quest_id: Symbol,
+    depositor: Address,
+    amount: i128,
+    total_balance: i128,
+) {
+    let topics = (TOPIC_ESCROW_DEPOSITED, quest_id, depositor);
+    let data = (amount, total_balance);
+    env.events().publish(topics, data);
+}
+
+/// Emit when tokens are paid out from escrow
+pub fn escrow_payout(
+    env: &Env,
+    quest_id: Symbol,
+    recipient: Address,
+    amount: i128,
+    remaining: i128,
+) {
+    let topics = (TOPIC_ESCROW_PAYOUT, quest_id, recipient);
+    let data = (amount, remaining);
+    env.events().publish(topics, data);
+}
+
+/// Emit when remaining escrow is refunded to creator
+pub fn escrow_refunded(
+    env: &Env,
+    quest_id: Symbol,
+    recipient: Address,
+    amount: i128,
+) {
+    let topics = (TOPIC_ESCROW_REFUNDED, quest_id, recipient);
+    let data = (amount,);
+    env.events().publish(topics, data);
+}
+
+/// Emit when a quest is cancelled
+pub fn quest_cancelled(
+    env: &Env,
+    quest_id: Symbol,
+    creator: Address,
+    refunded: i128,
+) {
+    let topics = (TOPIC_QUEST_CANCELLED, quest_id, creator);
+    let data = (refunded,);
+    env.events().publish(topics, data);
+}

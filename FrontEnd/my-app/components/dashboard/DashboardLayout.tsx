@@ -40,13 +40,15 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         }`}
       >
         <div className="flex h-16 items-center gap-2 border-b border-zinc-200 px-6 dark:border-zinc-800">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500">
-            <span className="text-sm font-bold text-white">S</span>
-          </div>
-          <span className="text-lg font-bold">
-            <span className="text-cyan-400">Stellar</span>
-            <span className="text-zinc-900 dark:text-white">Earn</span>
-          </span>
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500">
+              <span className="text-sm font-bold text-white">S</span>
+            </div>
+            <span className="text-lg font-bold">
+              <span className="text-cyan-400">Stellar</span>
+              <span className="text-zinc-900 dark:text-white">Earn</span>
+            </span>
+          </Link>
           <button
             onClick={() => setSidebarOpen(false)}
             className="ml-auto rounded-lg p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 lg:hidden"
@@ -117,7 +119,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               />
             </svg>
           </button>
-          <div className="ml-4 flex items-center gap-2">
+          <Link href="/" className="ml-4 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500">
               <span className="text-xs font-bold text-white">S</span>
             </div>
@@ -125,7 +127,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               <span className="text-cyan-400">Stellar</span>
               <span className="text-zinc-900 dark:text-white">Earn</span>
             </span>
-          </div>
+          </Link>
         </header>
 
         <main className="p-6 lg:p-8">{children}</main>

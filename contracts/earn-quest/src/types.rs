@@ -30,6 +30,7 @@ pub enum QuestStatus {
     Paused,
     Completed,
     Expired,
+    Cancelled
 }
 
 #[contracttype]
@@ -58,4 +59,52 @@ pub enum Badge {
     Veteran,
     Master,
     Legend,
+}
+
+//================================================================================
+// Batch operation input types (gas-optimized multi-item operations)
+//================================================================================
+
+/// Single quest registration input for batch registration.
+/// Creator is implied from auth in register_quests_batch.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BatchQuestInput {
+    pub id: Symbol,
+    pub reward_asset: Address,
+    pub reward_amount: i128,
+    pub verifier: Address,
+    pub deadline: u64,
+}
+
+/// Single approval input for batch approval.
+/// Verifier is implied from auth in approve_submissions_batch.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BatchApprovalInput {
+    pub quest_id: Symbol,
+    pub submitter: Address,
+}
+
+
+/// Escrow tracks tokens locked per quest.
+/// Created when a creator calls deposit_escrow().
+/// Updated when payouts happen or funds are refunded.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct EscrowInfo {
+    /// Which quest this escrow belongs to
+    pub quest_id: Symbol,
+    /// Who deposited (must be quest creator)
+    pub depositor: Address,
+    /// Which token is held
+    pub token: Address,
+    /// Total tokens deposited (cumulative, includes top-ups)
+    pub total_deposited: i128,
+    /// Total tokens paid out to quest completers
+    pub total_paid_out: i128,
+    /// Total tokens refunded back to creator
+    pub total_refunded: i128,
+    /// Whether this escrow is still active
+    pub is_active: bool,
 }

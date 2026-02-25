@@ -21,6 +21,12 @@ pub const MAX_BADGES_COUNT: u32 = 50;
 /// Maximum number of claims per quest
 pub const MAX_QUEST_CLAIMS: u32 = 10_000;
 
+/// Maximum number of quests that can be registered in a single batch call
+pub const MAX_BATCH_QUEST_REGISTRATION: u32 = 50;
+
+/// Maximum number of submissions that can be approved in a single batch call
+pub const MAX_BATCH_APPROVALS: u32 = 50;
+
 //================================================================================
 // Address Validation
 //================================================================================
@@ -210,6 +216,8 @@ pub fn validate_quest_status_transition(
         (QuestStatus::Active, QuestStatus::Expired) => true,
         (QuestStatus::Paused, QuestStatus::Active) => true,
         (QuestStatus::Paused, QuestStatus::Expired) => true,
+        (QuestStatus::Active, QuestStatus::Cancelled) => true,
+        (QuestStatus::Paused, QuestStatus::Cancelled) => true,
         _ => false,
     };
 
@@ -278,4 +286,38 @@ pub fn validate_quest_claims_limit(total_claims: u32) -> Result<(), Error> {
         return Err(Error::ArrayTooLong);
     }
     Ok(())
+}
+
+//================================================================================
+// Batch validation
+//================================================================================
+
+/// Validates that the quest registration batch size is within limits.
+pub fn validate_batch_quest_size(length: u32) -> Result<(), Error> {
+    if length == 0 {
+        return Err(Error::ArrayTooLong);
+    }
+    if length > MAX_BATCH_QUEST_REGISTRATION {
+        return Err(Error::ArrayTooLong);
+    }
+    Ok(())
+}
+
+/// Validates that the approval batch size is within limits.
+pub fn validate_batch_approval_size(length: u32) -> Result<(), Error> {
+    if length == 0 {
+        return Err(Error::ArrayTooLong);
+    }
+    if length > MAX_BATCH_APPROVALS {
+        return Err(Error::ArrayTooLong);
+    }
+    Ok(())
+}
+
+/// Check if a quest is in a terminal state (no more activity possible)
+pub fn is_quest_terminal(status: &QuestStatus) -> bool {
+    matches!(
+        status,
+        QuestStatus::Completed | QuestStatus::Expired | QuestStatus::Cancelled
+    )
 }

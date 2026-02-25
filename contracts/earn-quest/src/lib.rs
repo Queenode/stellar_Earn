@@ -11,10 +11,11 @@ pub mod types;
 pub mod validation;
 mod quest;
 mod submission;
+mod escrow; 
 
 use crate::errors::Error;
-use crate::types::{Badge, UserStats};
-use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Symbol};
+use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, UserStats, EscrowInfo};
+use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Symbol, Vec};
 
 #[contract]
 pub struct EarnQuestContract;
@@ -69,6 +70,20 @@ impl EarnQuestContract {
         )
     }
 
+    /// Register multiple quests in one transaction (gas-optimized).
+    /// Creator must authorize; all quests are registered to that creator.
+    /// Batch size is limited; on first error the entire batch reverts.
+    pub fn register_quests_batch(
+        env: Env,
+        creator: Address,
+        quests: Vec<BatchQuestInput>,
+    ) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        creator.require_auth();
+
+        quest::register_quests_batch(&env, &creator, &quests)
+    }
+
     /// Submit proof with input validation
     pub fn submit_proof(
         env: Env,
@@ -95,6 +110,20 @@ impl EarnQuestContract {
         submission::approve_submission(&env, &quest_id, &submitter, &verifier)
     }
 
+    /// Approve multiple submissions in one transaction (gas-optimized).
+    /// Verifier must authorize; all items must be for quests where this address is verifier.
+    /// Batch size is limited; on first error the entire batch reverts.
+    pub fn approve_submissions_batch(
+        env: Env,
+        verifier: Address,
+        submissions: Vec<BatchApprovalInput>,
+    ) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        verifier.require_auth();
+
+        submission::approve_submissions_batch(&env, &verifier, &submissions)
+    }
+
     /// Claim approved reward with full validation
     pub fn claim_reward(env: Env, quest_id: Symbol, submitter: Address) -> Result<(), Error> {
         // 1. Auth
@@ -108,8 +137,7 @@ impl EarnQuestContract {
         let quest = storage::get_quest(&env, &quest_id)?;
 
         // 4. Payout
-        payout::transfer_reward(&env, &quest.reward_asset, &submitter, quest.reward_amount)?;
-
+        payout::transfer_reward_from_escrow(&env, &quest_id, &quest.reward_asset, &submitter, quest.reward_amount)?;
         // 5. State Update
         storage::update_submission_status(
             &env,
@@ -176,6 +204,67 @@ impl EarnQuestContract {
         // Validate withdraw amount range
         validation::validate_reward_amount(amount)?;
         security::emergency_withdraw(&env, &caller, &asset, &to, amount)
+    }
+
+     /// Deposit tokens into escrow for a quest.
+    ///
+    /// The creator sends tokens to the contract, earmarked for this quest.
+    /// Can be called multiple times to add more funds (top-up).
+    ///
+    /// # Who can call: Quest creator only
+    /// # Token flow: Creator wallet → Contract
+    pub fn deposit_escrow(
+        env: Env,
+        quest_id: Symbol,
+        depositor: Address,
+        token: Address,
+        amount: i128,
+    ) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        depositor.require_auth();
+        escrow::deposit(&env, &quest_id, &depositor, &token, amount)
+    }
+
+    /// Cancel a quest and refund remaining escrow to creator.
+    ///
+    /// # Who can call: Quest creator only
+    /// # Requires: Quest is Active or Paused
+    /// # Token flow: Contract → Creator wallet (remaining balance)
+    /// # Returns: Amount refunded
+    pub fn cancel_quest(
+        env: Env,
+        quest_id: Symbol,
+        creator: Address,
+    ) -> Result<i128, Error> {
+        security::require_not_paused(&env)?;
+        creator.require_auth();
+        escrow::cancel_quest(&env, &quest_id, &creator)
+    }
+
+    /// Withdraw unclaimed escrow from a finished quest.
+    ///
+    /// # Who can call: Quest creator only
+    /// # Requires: Quest is Completed, Expired, or Cancelled
+    /// # Token flow: Contract → Creator wallet (remaining balance)
+    /// # Returns: Amount withdrawn
+    pub fn withdraw_unclaimed(
+        env: Env,
+        quest_id: Symbol,
+        creator: Address,
+    ) -> Result<i128, Error> {
+        security::require_not_paused(&env)?;
+        creator.require_auth();
+        escrow::withdraw_unclaimed(&env, &quest_id, &creator)
+    }
+
+    /// Query the available escrow balance for a quest.
+    pub fn get_escrow_balance(env: Env, quest_id: Symbol) -> Result<i128, Error> {
+        escrow::get_balance(&env, &quest_id)
+    }
+
+    /// Query the full escrow info for a quest.
+    pub fn get_escrow_info(env: Env, quest_id: Symbol) -> Result<EscrowInfo, Error> {
+        escrow::get_info(&env, &quest_id)
     }
 
     /// Admin: set unpause approvals threshold
