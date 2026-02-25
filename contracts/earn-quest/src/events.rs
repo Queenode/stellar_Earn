@@ -160,24 +160,14 @@ pub fn escrow_payout(
 }
 
 /// Emit when remaining escrow is refunded to creator
-pub fn escrow_refunded(
-    env: &Env,
-    quest_id: Symbol,
-    recipient: Address,
-    amount: i128,
-) {
+pub fn escrow_refunded(env: &Env, quest_id: Symbol, recipient: Address, amount: i128) {
     let topics = (TOPIC_ESCROW_REFUNDED, quest_id, recipient);
     let data = (amount,);
     env.events().publish(topics, data);
 }
 
 /// Emit when a quest is cancelled
-pub fn quest_cancelled(
-    env: &Env,
-    quest_id: Symbol,
-    creator: Address,
-    refunded: i128,
-) {
+pub fn quest_cancelled(env: &Env, quest_id: Symbol, creator: Address, refunded: i128) {
     let topics = (TOPIC_QUEST_CANCELLED, quest_id, creator);
     let data = (refunded,);
     env.events().publish(topics, data);

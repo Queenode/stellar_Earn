@@ -30,7 +30,7 @@ pub enum QuestStatus {
     Paused,
     Completed,
     Expired,
-    Cancelled
+    Cancelled,
 }
 
 #[contracttype]
@@ -85,7 +85,6 @@ pub struct BatchApprovalInput {
     pub quest_id: Symbol,
     pub submitter: Address,
 }
-
 
 /// Escrow tracks tokens locked per quest.
 /// Created when a creator calls deposit_escrow().
