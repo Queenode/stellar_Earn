@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, BytesN, Symbol, Vec};
+use soroban_sdk::{contracttype, Address, BytesN, String, Symbol, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -86,6 +86,25 @@ pub struct BatchApprovalInput {
     pub submitter: Address,
 }
 
+/// Description storage mode for quest metadata.
+/// Inline is simpler; hash reference is cheaper for large content.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MetadataDescription {
+    Inline(String),
+    Hash(BytesN<32>),
+}
+
+/// Rich quest metadata shown to users.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct QuestMetadata {
+    pub title: String,
+    pub description: MetadataDescription,
+    pub requirements: Vec<String>,
+    pub category: String,
+    pub tags: Vec<String>,
+}
 /// Escrow tracks tokens locked per quest.
 /// Created when a creator calls deposit_escrow().
 /// Updated when payouts happen or funds are refunded.
