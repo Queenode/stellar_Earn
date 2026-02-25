@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import type { UserProfile } from '@/lib/types/profile';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/notifications/useToast';
+import { useToast } from '@/components/notifications/useToast';
+
+import OptimizedImage from '@/components/ui/OptimizedImage';
+
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -13,32 +16,33 @@ interface ProfileHeaderProps {
   onEdit?: () => void;
 }
 
-export function ProfileHeader({ 
-  profile, 
-  isLoading, 
-  onFollow, 
-  onUnfollow, 
-  onEdit 
+export function ProfileHeader({
+  profile,
+  isLoading,
+  onFollow,
+  onUnfollow,
+  onEdit
 }: ProfileHeaderProps) {
+  const { success, error: toastError } = useToast();
   const [isFollowing, setIsFollowing] = useState(profile?.isFollowing || false);
   const [followLoading, setFollowLoading] = useState(false);
 
   const handleFollow = async () => {
     if (!profile || profile.isOwnProfile) return;
-    
+
     setFollowLoading(true);
     try {
       if (isFollowing) {
         await onUnfollow?.();
         setIsFollowing(false);
-        toast.success('Unfollowed user');
+        success('Unfollowed user');
       } else {
         await onFollow?.();
         setIsFollowing(true);
-        toast.success('Following user');
+        success('Following user');
       }
-    } catch (error) {
-      toast.error('Failed to update follow status');
+    } catch (err) {
+      toastError('Failed to update follow status');
     } finally {
       setFollowLoading(false);
     }
@@ -52,7 +56,7 @@ export function ProfileHeader({
           <div className="flex-shrink-0">
             <div className="w-24 h-24 rounded-full bg-zinc-800 animate-pulse" />
           </div>
-          
+
           {/* Info skeleton */}
           <div className="flex-1 w-full">
             <div className="h-8 bg-zinc-800 rounded w-1/3 mb-2 animate-pulse" />
@@ -73,9 +77,11 @@ export function ProfileHeader({
         <div className="flex-shrink-0">
           <div className="relative">
             {profile.avatar ? (
-              <img
+              <OptimizedImage
                 src={profile.avatar}
                 alt={profile.username}
+                width={96}
+                height={96}
                 className="w-24 h-24 rounded-full object-cover border-2 border-zinc-700"
               />
             ) : (
@@ -93,7 +99,7 @@ export function ProfileHeader({
             <h1 className="text-2xl font-bold text-white">
               {profile.username}
             </h1>
-            
+
             {!profile.isOwnProfile && (
               <Button
                 variant={isFollowing ? "outline" : "default"}
@@ -114,7 +120,7 @@ export function ProfileHeader({
                 )}
               </Button>
             )}
-            
+
             {profile.isOwnProfile && onEdit && (
               <Button
                 variant="outline"

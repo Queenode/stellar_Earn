@@ -10,6 +10,8 @@ import {
   ALLOWED_FILE_EXTENSIONS,
   MAX_FILE_SIZE,
 } from '@/lib/validation/submission';
+import OptimizedImage from '@/components/ui/OptimizedImage';
+
 
 interface FileUploadProps {
   onFileSelect: (file: File | null) => void;
@@ -157,15 +159,14 @@ export function FileUpload({
   return (
     <div className="w-full">
       <div
-        className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
-          isDragging
+        className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${isDragging
             ? 'border-[#089ec3] bg-[#089ec3]/5'
             : displayError
-            ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/10'
-            : selectedFile
-            ? 'border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-900/10'
-            : 'border-zinc-300 bg-zinc-50 hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-800/50 dark:hover:border-zinc-600'
-        } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/10'
+              : selectedFile
+                ? 'border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-900/10'
+                : 'border-zinc-300 bg-zinc-50 hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-800/50 dark:hover:border-zinc-600'
+          } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -193,9 +194,12 @@ export function FileUpload({
         {selectedFile ? (
           <div className="flex w-full items-center gap-4">
             {previewUrl ? (
-              <img
+              <OptimizedImage
                 src={previewUrl}
                 alt="Preview"
+                width={64}
+                height={64}
+                unoptimized
                 className="h-16 w-16 rounded-lg object-cover"
               />
             ) : (

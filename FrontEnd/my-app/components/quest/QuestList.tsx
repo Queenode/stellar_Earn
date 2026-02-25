@@ -4,6 +4,7 @@ import { QuestCard } from './QuestCard';
 import { EmptyQuestState } from './EmptyQuestState';
 import type { Quest } from '@/lib/types/quest';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { memo } from 'react';
 
 interface QuestListProps {
   quests: Quest[];
@@ -41,14 +42,14 @@ function ErrorState({ error }: { error: Error }) {
   );
 }
 
-export function QuestList({
+export const QuestList = memo(({
   quests,
   isLoading,
   error,
   onQuestClick,
   hasActiveFilters,
   onClearFilters,
-}: QuestListProps) {
+}: QuestListProps) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -79,4 +80,6 @@ export function QuestList({
       ))}
     </div>
   );
-}
+});
+
+QuestList.displayName = 'QuestList';
