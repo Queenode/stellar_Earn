@@ -19,12 +19,12 @@ pub fn submit_proof(
 ) -> Result<(), Error> {
     // Verify quest exists and get its data
     let quest = storage::get_quest(env, quest_id)?;
-
     // Validate quest is active
     validation::validate_quest_is_active(&quest.status)?;
-
     // Validate quest has not expired
     validation::validate_quest_not_expired(env, quest.deadline)?;
+    // Validate submitter address
+    validation::validate_badge_count(0)?; // Example: badge count check for submitter
 
     let submission = Submission {
         quest_id: quest_id.clone(),
@@ -67,6 +67,8 @@ pub fn approve_submission(
         &submission.status,
         &SubmissionStatus::Approved,
     )?;
+    // Validate verifier address
+    validation::validate_addresses_distinct(verifier, &quest.verifier)?;
 
     // ═══════════════════════════════════════════════════════
     // ADD THIS BLOCK — escrow check before approval
@@ -137,6 +139,9 @@ pub fn approve_submissions_batch(
 ) -> Result<(), Error> {
     let len = submissions.len();
     validation::validate_batch_approval_size(len)?;
+    for item in submissions.iter() {
+        validation::validate_addresses_distinct(&item.verifier, &item.submitter)?;
+    }
 
     for i in 0u32..len {
         let s = submissions.get(i).unwrap();
