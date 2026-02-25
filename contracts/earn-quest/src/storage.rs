@@ -1,5 +1,5 @@
 use crate::errors::Error;
-use crate::types::{Quest, QuestStatus, Submission, SubmissionStatus, UserStats};
+use crate::types::{Quest, QuestStatus, Submission, SubmissionStatus, UserStats, EscrowInfo};
 use soroban_sdk::{contracttype, Address, Env, Symbol, Vec};
 
 /// Storage key definitions for the contract's persistent data.

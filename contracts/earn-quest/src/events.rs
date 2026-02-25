@@ -15,6 +15,8 @@ const TOPIC_EMERGENCY_UNPAUSED: Symbol = symbol_short!("eunpause");
 const TOPIC_EMERGENCY_WITHDRAW: Symbol = symbol_short!("ewdraw");
 const TOPIC_UNPAUSE_APPROVED: Symbol = symbol_short!("uappr");
 const TOPIC_TIMELOCK_SCHEDULED: Symbol = symbol_short!("tl_sched");
+const TOPIC_QUEST_PAUSED: Symbol = symbol_short!("q_pause");
+const TOPIC_QUEST_RESUMED: Symbol = symbol_short!("q_resume");
 
 /// Emit when a new quest is created
 pub fn quest_registered(
@@ -204,5 +206,19 @@ pub fn quest_cancelled(
 ) {
     let topics = (TOPIC_QUEST_CANCELLED, quest_id, creator);
     let data = (refunded,);
+    env.events().publish(topics, data);
+}
+
+/// Emit when a quest is paused by an admin
+pub fn quest_paused(env: &Env, quest_id: Symbol, by: Address) {
+    let topics = (TOPIC_QUEST_PAUSED, quest_id, by.clone());
+    let data = (by,);
+    env.events().publish(topics, data);
+}
+
+/// Emit when a quest is resumed by an admin
+pub fn quest_resumed(env: &Env, quest_id: Symbol, by: Address) {
+    let topics = (TOPIC_QUEST_RESUMED, quest_id, by.clone());
+    let data = (by,);
     env.events().publish(topics, data);
 }

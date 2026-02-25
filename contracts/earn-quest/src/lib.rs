@@ -14,7 +14,7 @@ mod submission;
 mod escrow; 
 
 use crate::errors::Error;
-use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, UserStats, EscrowInfo};
+use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, UserStats, EscrowInfo, Quest, Submission};
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Symbol, Vec};
 
 #[contract]
@@ -82,6 +82,20 @@ impl EarnQuestContract {
         creator.require_auth();
 
         quest::register_quests_batch(&env, &creator, &quests)
+    }
+
+    /// Pause an individual quest (admin only).
+    pub fn pause_quest(env: Env, caller: Address, quest_id: Symbol) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        admin::require_admin(&env, &caller)?;
+        quest::pause_quest(&env, &quest_id, &caller)
+    }
+
+    /// Resume an individual quest (admin only).
+    pub fn resume_quest(env: Env, caller: Address, quest_id: Symbol) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        admin::require_admin(&env, &caller)?;
+        quest::resume_quest(&env, &quest_id, &caller)
     }
 
     /// Submit proof with input validation
@@ -265,6 +279,16 @@ impl EarnQuestContract {
     /// Query the full escrow info for a quest.
     pub fn get_escrow_info(env: Env, quest_id: Symbol) -> Result<EscrowInfo, Error> {
         escrow::get_info(&env, &quest_id)
+    }
+
+    /// Query quest details by ID.
+    pub fn get_quest(env: Env, quest_id: Symbol) -> Result<Quest, Error> {
+        storage::get_quest(&env, &quest_id)
+    }
+
+    /// Query submission details for a user.
+    pub fn get_submission(env: Env, quest_id: Symbol, submitter: Address) -> Result<Submission, Error> {
+        storage::get_submission(&env, &quest_id, &submitter)
     }
 
     /// Admin: set unpause approvals threshold
