@@ -10,6 +10,8 @@ use soroban_sdk::{contracttype, Address, Env, Symbol, Vec};
 pub enum DataKey {
     /// Stores individual Quest data, keyed by quest ID (Symbol)
     Quest(Symbol),
+    /// Stores quest metadata, keyed by quest ID (Symbol)
+    QuestMetadata(Symbol),
     /// Stores individual Submission data, keyed by quest ID and submitter address
     Submission(Symbol, Address),
     /// Stores UserStats data, keyed by user address
@@ -91,6 +93,28 @@ pub fn set_quest(env: &Env, id: &Symbol, quest: &Quest) {
     env.storage()
         .instance()
         .set(&DataKey::Quest(id.clone()), quest);
+}
+
+/// Checks if metadata exists for a quest.
+pub fn has_quest_metadata(env: &Env, id: &Symbol) -> bool {
+    env.storage()
+        .instance()
+        .has(&DataKey::QuestMetadata(id.clone()))
+}
+
+/// Gets metadata for a quest, if present.
+pub fn get_quest_metadata(env: &Env, id: &Symbol) -> Result<QuestMetadata, Error> {
+    env.storage()
+        .instance()
+        .get(&DataKey::QuestMetadata(id.clone()))
+        .ok_or(Error::MetadataNotFound)
+}
+
+/// Stores metadata for a quest.
+pub fn set_quest_metadata(env: &Env, id: &Symbol, metadata: &QuestMetadata) {
+    env.storage()
+        .instance()
+        .set(&DataKey::QuestMetadata(id.clone()), metadata);
 }
 
 //================================================================================
@@ -260,6 +284,9 @@ pub fn delete_quest(env: &Env, id: &Symbol) -> Result<(), Error> {
     }
 
     env.storage().instance().remove(&DataKey::Quest(id.clone()));
+    env.storage()
+        .instance()
+        .remove(&DataKey::QuestMetadata(id.clone()));
     Ok(())
 }
 
@@ -676,9 +703,7 @@ fn dec_unpause_approval_count(env: &Env) {
         .instance()
         .get(&DataKey::UnpauseApprovalCount)
         .unwrap_or(0u32);
-    if cur > 0 {
-        cur -= 1;
-    }
+    cur = cur.saturating_sub(1);
     env.storage()
         .instance()
         .set(&DataKey::UnpauseApprovalCount, &cur);
@@ -708,4 +733,11 @@ pub fn set_escrow(env: &Env, quest_id: &Symbol, escrow: &EscrowInfo) {
     env.storage()
         .instance()
         .set(&DataKey::Escrow(quest_id.clone()), escrow);
+}
+
+/// Delete escrow record for a quest (cleanup after terminal state)
+pub fn delete_escrow(env: &Env, quest_id: &Symbol) {
+    env.storage()
+        .instance()
+        .remove(&DataKey::Escrow(quest_id.clone()));
 }

@@ -1,9 +1,17 @@
 use crate::errors::Error;
 use crate::events;
 use crate::storage;
-use crate::types::{BatchQuestInput, Quest, QuestStatus};
+use crate::types::{BatchQuestInput, MetadataDescription, Quest, QuestMetadata, QuestStatus};
 use crate::validation;
 use soroban_sdk::{Address, Env, Symbol, Vec};
+
+const MAX_METADATA_TITLE_LEN: u32 = 80;
+const MAX_METADATA_CATEGORY_LEN: u32 = 40;
+const MAX_METADATA_TAG_LEN: u32 = 32;
+const MAX_METADATA_REQUIREMENT_LEN: u32 = 200;
+const MAX_METADATA_INLINE_DESCRIPTION_LEN: u32 = 1200;
+const MAX_METADATA_TAGS: u32 = 15;
+const MAX_METADATA_REQUIREMENTS: u32 = 20;
 
 /// Register a new quest with full input validation.
 ///
@@ -65,6 +73,31 @@ pub fn register_quest(
     Ok(())
 }
 
+/// Register a new quest and store metadata in the same transaction.
+pub fn register_quest_with_metadata(
+    env: &Env,
+    id: &Symbol,
+    creator: &Address,
+    reward_asset: &Address,
+    reward_amount: i128,
+    verifier: &Address,
+    deadline: u64,
+    metadata: &QuestMetadata,
+) -> Result<(), Error> {
+    register_quest(
+        env,
+        id,
+        creator,
+        reward_asset,
+        reward_amount,
+        verifier,
+        deadline,
+    )?;
+    validate_metadata(metadata)?;
+    storage::set_quest_metadata(env, id, metadata);
+    Ok(())
+}
+
 //================================================================================
 // Batch registration (gas-optimized)
 //================================================================================
@@ -104,5 +137,54 @@ pub fn register_quests_batch(
         )?;
     }
 
+    Ok(())
+}
+
+/// Update metadata for an existing quest.
+/// Only the quest creator or an admin can update metadata.
+pub fn update_quest_metadata(
+    env: &Env,
+    quest_id: &Symbol,
+    updater: &Address,
+    metadata: &QuestMetadata,
+) -> Result<(), Error> {
+    let quest = storage::get_quest(env, quest_id)?;
+    if &quest.creator != updater && !storage::is_admin(env, updater) {
+        return Err(Error::Unauthorized);
+    }
+
+    validate_metadata(metadata)?;
+    storage::set_quest_metadata(env, quest_id, metadata);
+    Ok(())
+}
+
+fn validate_metadata(metadata: &QuestMetadata) -> Result<(), Error> {
+    validate_string_len(&metadata.title, MAX_METADATA_TITLE_LEN)?;
+    validate_string_len(&metadata.category, MAX_METADATA_CATEGORY_LEN)?;
+
+    validation::validate_array_length(metadata.tags.len(), MAX_METADATA_TAGS)?;
+    for i in 0..metadata.tags.len() {
+        validate_string_len(&metadata.tags.get(i).unwrap(), MAX_METADATA_TAG_LEN)?;
+    }
+
+    validation::validate_array_length(metadata.requirements.len(), MAX_METADATA_REQUIREMENTS)?;
+    for i in 0..metadata.requirements.len() {
+        validate_string_len(
+            &metadata.requirements.get(i).unwrap(),
+            MAX_METADATA_REQUIREMENT_LEN,
+        )?;
+    }
+
+    if let MetadataDescription::Inline(desc) = &metadata.description {
+        validate_string_len(desc, MAX_METADATA_INLINE_DESCRIPTION_LEN)?;
+    }
+
+    Ok(())
+}
+
+fn validate_string_len(value: &soroban_sdk::String, max: u32) -> Result<(), Error> {
+    if value.len() > max {
+        return Err(Error::StringTooLong);
+    }
     Ok(())
 }

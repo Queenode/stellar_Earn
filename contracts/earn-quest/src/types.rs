@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, BytesN, Symbol, Vec};
+use soroban_sdk::{contracttype, Address, BytesN, String, Symbol, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -67,6 +67,10 @@ pub enum Badge {
 
 /// Single quest registration input for batch registration.
 /// Creator is implied from auth in register_quests_batch.
+/// Platform-wide aggregated statistics.
+///
+/// Updated atomically on every quest creation, submission, and claim.
+/// Queried via `EarnQuestContract::get_platform_stats()`.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BatchQuestInput {
@@ -86,6 +90,25 @@ pub struct BatchApprovalInput {
     pub submitter: Address,
 }
 
+/// Description storage mode for quest metadata.
+/// Inline is simpler; hash reference is cheaper for large content.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MetadataDescription {
+    Inline(String),
+    Hash(BytesN<32>),
+}
+
+/// Rich quest metadata shown to users.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct QuestMetadata {
+    pub title: String,
+    pub description: MetadataDescription,
+    pub requirements: Vec<String>,
+    pub category: String,
+    pub tags: Vec<String>,
+}
 /// Escrow tracks tokens locked per quest.
 /// Created when a creator calls deposit_escrow().
 /// Updated when payouts happen or funds are refunded.
@@ -106,4 +129,18 @@ pub struct EscrowInfo {
     pub total_refunded: i128,
     /// Whether this escrow is still active
     pub is_active: bool,
+    /// Ledger timestamp when the escrow was first created
+    pub created_at: u64,
+    /// Number of deposits made (1 = initial, >1 = top-ups)
+    pub deposit_count: u32,
+pub struct CreatorStats {
+    /// Total quests created by this address.
+    pub quests_created: u64,
+    /// Sum of `reward_amount` across all quests created by this address.
+    pub total_rewards_posted: u128,
+    /// Total submissions received across all of this creator's quests.
+    pub total_submissions_received: u64,
+    /// Total successful claims paid out across all of this creator's quests.
+    pub total_claims_paid: u64,
+
 }

@@ -13,8 +13,12 @@ mod submission;
 pub mod types;
 pub mod validation;
 
+main
+
 use crate::errors::Error;
-use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, EscrowInfo, UserStats};
+use crate::types::{
+    Badge, BatchApprovalInput, BatchQuestInput, EscrowInfo, QuestMetadata, UserStats,
+};
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Symbol, Vec};
 
 #[contract]
@@ -67,6 +71,32 @@ impl EarnQuestContract {
             reward_amount,
             &verifier,
             deadline,
+        )
+    }
+
+    /// Register a new quest and attach metadata during creation.
+    pub fn register_quest_with_metadata(
+        env: Env,
+        id: Symbol,
+        creator: Address,
+        reward_asset: Address,
+        reward_amount: i128,
+        verifier: Address,
+        deadline: u64,
+        metadata: QuestMetadata,
+    ) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        creator.require_auth();
+
+        quest::register_quest_with_metadata(
+            &env,
+            &id,
+            &creator,
+            &reward_asset,
+            reward_amount,
+            &verifier,
+            deadline,
+            &metadata,
         )
     }
 
@@ -253,6 +283,38 @@ impl EarnQuestContract {
         security::require_not_paused(&env)?;
         creator.require_auth();
         escrow::withdraw_unclaimed(&env, &quest_id, &creator)
+    }
+
+    /// Expire a quest whose deadline has passed and refund remaining escrow.
+    ///
+    /// # Who can call: Quest creator only
+    /// # Requires: Quest is Active or Paused AND deadline has passed
+    /// # Token flow: Contract → Creator wallet (remaining balance)
+    /// # Returns: Amount refunded
+    pub fn expire_quest(env: Env, quest_id: Symbol, creator: Address) -> Result<i128, Error> {
+        security::require_not_paused(&env)?;
+        creator.require_auth();
+        escrow::expire_quest(&env, &quest_id, &creator)
+    /// Update quest metadata (quest creator or admin).
+    pub fn update_quest_metadata(
+        env: Env,
+        quest_id: Symbol,
+        updater: Address,
+        metadata: QuestMetadata,
+    ) -> Result<(), Error> {
+        security::require_not_paused(&env)?;
+        updater.require_auth();
+        quest::update_quest_metadata(&env, &quest_id, &updater, &metadata)
+    }
+
+    /// Query quest metadata.
+    pub fn get_quest_metadata(env: Env, quest_id: Symbol) -> Result<QuestMetadata, Error> {
+        storage::get_quest_metadata(&env, &quest_id)
+    }
+
+    /// Check whether metadata exists for a quest.
+    pub fn has_quest_metadata(env: Env, quest_id: Symbol) -> bool {
+        storage::has_quest_metadata(&env, &quest_id)
     }
 
     /// Query the available escrow balance for a quest.

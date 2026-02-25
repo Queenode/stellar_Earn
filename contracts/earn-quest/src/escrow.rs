@@ -84,11 +84,14 @@ pub fn deposit(
             total_paid_out: 0,
             total_refunded: 0,
             is_active: true,
+            created_at: env.ledger().timestamp(),
+            deposit_count: 0,
         }
     };
 
-    // Update balance
+    // Update balance and deposit counter
     escrow.total_deposited += amount;
+    escrow.deposit_count += 1;
     storage::set_escrow(env, quest_id, &escrow);
 
     // Emit event
@@ -252,6 +255,57 @@ pub fn cancel_quest(env: &Env, quest_id: &Symbol, caller: &Address) -> Result<i1
     };
 
     events::quest_cancelled(env, quest_id.clone(), caller.clone(), refunded);
+
+    Ok(refunded)
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPIRE QUEST: Mark expired + refund
+// ═══════════════════════════════════════════════════════════════
+
+/// Mark a quest as expired and refund remaining escrow to the creator.
+///
+/// # Requirements
+/// - Caller must be the quest creator or admin
+/// - Quest must be Active or Paused
+/// - Quest deadline must have passed
+///
+/// # Flow
+/// ```text
+/// Quest.status = Expired
+/// Remaining escrow → Creator's wallet
+/// ```
+pub fn expire_quest(env: &Env, quest_id: &Symbol, caller: &Address) -> Result<i128, Error> {
+    let quest = storage::get_quest(env, quest_id)?;
+
+    // Only creator can expire
+    if *caller != quest.creator {
+        return Err(Error::Unauthorized);
+    }
+
+    // Must not already be terminal
+    if validation::is_quest_terminal(&quest.status) {
+        return Err(Error::QuestNotActive);
+    }
+
+    // Quest deadline must have passed
+    let current_time = env.ledger().timestamp();
+    if current_time < quest.deadline {
+        return Err(Error::QuestNotActive); // Not yet expired
+    }
+
+    // Validate the status transition
+    validation::validate_quest_status_transition(&quest.status, &QuestStatus::Expired)?;
+
+    // Update quest status
+    storage::update_quest_status(env, quest_id, QuestStatus::Expired)?;
+
+    // Refund escrow if it exists
+    let refunded = if storage::has_escrow(env, quest_id) {
+        refund_remaining(env, quest_id)?
+    } else {
+        0
+    };
 
     Ok(refunded)
 }
