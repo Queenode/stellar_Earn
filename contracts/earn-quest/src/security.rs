@@ -1,7 +1,7 @@
 use crate::errors::Error;
 use crate::events;
 use crate::storage;
-use soroban_sdk::{Address, Env, token};
+use soroban_sdk::{token, Address, Env};
 
 /// Is contract paused?
 pub fn is_paused(env: &Env) -> bool {

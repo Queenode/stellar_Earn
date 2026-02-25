@@ -3,15 +3,20 @@
 mod admin;
 pub mod errors;
 mod events;
-mod security;
 mod payout;
+mod quest;
 mod reputation;
+mod security;
 pub mod storage;
+mod submission;
 pub mod types;
 pub mod validation;
+<<<<<<< HEAD
 mod quest;
 mod submission;
 mod escrow; 
+=======
+>>>>>>> f4f4415 (fix: format issue)
 
 use crate::errors::Error;
 use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, UserStats, EscrowInfo};
