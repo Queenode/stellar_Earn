@@ -3,15 +3,15 @@
 mod admin;
 pub mod errors;
 mod events;
-mod security;
 mod payout;
+mod quest;
 mod reputation;
+mod security;
 pub mod storage;
+mod submission;
 pub mod types;
 pub mod validation;
-mod quest;
-mod submission;
-mod escrow; 
+mod escrow;
 
 use crate::errors::Error;
 use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, UserStats, EscrowInfo};

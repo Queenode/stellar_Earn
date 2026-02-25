@@ -1,6 +1,6 @@
 #![allow(unused)]
-use soroban_sdk::{Env, Symbol, Address, BytesN, symbol_short};
 use crate::types::Badge;
+use soroban_sdk::{symbol_short, Address, BytesN, Env, Symbol};
 
 // Event Topics (Names)
 const TOPIC_QUEST_REGISTERED: Symbol = symbol_short!("quest_reg");
@@ -69,12 +69,7 @@ pub fn timelock_scheduled(env: &Env, scheduled_time: u64) {
 }
 
 /// Emit when a user submits a proof
-pub fn proof_submitted(
-    env: &Env,
-    quest_id: Symbol,
-    submitter: Address,
-    proof_hash: BytesN<32>,
-) {
+pub fn proof_submitted(env: &Env, quest_id: Symbol, submitter: Address, proof_hash: BytesN<32>) {
     // Topics: [EventName, QuestID, Submitter]
     let topics = (TOPIC_PROOF_SUBMITTED, quest_id, submitter);
     // Data: (ProofHash)
@@ -83,12 +78,7 @@ pub fn proof_submitted(
 }
 
 /// Emit when a verifier approves a submission
-pub fn submission_approved(
-    env: &Env,
-    quest_id: Symbol,
-    submitter: Address,
-    verifier: Address,
-) {
+pub fn submission_approved(env: &Env, quest_id: Symbol, submitter: Address, verifier: Address) {
     // Topics: [EventName, QuestID, Submitter]
     let topics = (TOPIC_SUBMISSION_APPROVED, quest_id, submitter);
     // Data: (Verifier)
@@ -112,13 +102,7 @@ pub fn reward_claimed(
 }
 
 /// Emit when XP is awarded to a user
-pub fn xp_awarded(
-    env: &Env,
-    user: Address,
-    xp_amount: u64,
-    total_xp: u64,
-    level: u32,
-) {
+pub fn xp_awarded(env: &Env, user: Address, xp_amount: u64, total_xp: u64, level: u32) {
     // Topics: [EventName, User]
     let topics = (TOPIC_XP_AWARDED, user);
     // Data: (XP Amount, Total XP, Level)
@@ -127,11 +111,7 @@ pub fn xp_awarded(
 }
 
 /// Emit when a user levels up
-pub fn level_up(
-    env: &Env,
-    user: Address,
-    new_level: u32,
-) {
+pub fn level_up(env: &Env, user: Address, new_level: u32) {
     // Topics: [EventName, User]
     let topics = (TOPIC_LEVEL_UP, user);
     // Data: (New Level)
@@ -140,11 +120,7 @@ pub fn level_up(
 }
 
 /// Emit when a badge is granted to a user
-pub fn badge_granted(
-    env: &Env,
-    user: Address,
-    badge: Badge,
-) {
+pub fn badge_granted(env: &Env, user: Address, badge: Badge) {
     // Topics: [EventName, User]
     let topics = (TOPIC_BADGE_GRANTED, user);
     // Data: (Badge)

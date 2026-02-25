@@ -145,9 +145,9 @@ fn symbol_len(sym: &soroban_sdk::Symbol) -> u32 {
     // We use a simple byte-count approach; Symbol stores short ASCII.
     // Since Soroban enforces this at construction, this is a secondary check.
     let _ = sym; // Symbol is always valid if constructed; length is implicitly bounded.
-    // In Soroban SDK, Symbols are at most 32 characters. We return a constant
-    // that passes validation since the SDK already enforces this.
-    // This function exists to provide a consistent API.
+                 // In Soroban SDK, Symbols are at most 32 characters. We return a constant
+                 // that passes validation since the SDK already enforces this.
+                 // This function exists to provide a consistent API.
     MAX_SYMBOL_LENGTH // Symbols that exist are always valid
 }
 
@@ -206,10 +206,7 @@ pub fn validate_badge_count(current_count: u32) -> Result<(), Error> {
 /// # Returns
 /// * `Ok(())` if the transition is allowed
 /// * `Err(Error::InvalidStatusTransition)` if the transition is not allowed
-pub fn validate_quest_status_transition(
-    from: &QuestStatus,
-    to: &QuestStatus,
-) -> Result<(), Error> {
+pub fn validate_quest_status_transition(from: &QuestStatus, to: &QuestStatus) -> Result<(), Error> {
     let valid = match (from, to) {
         (QuestStatus::Active, QuestStatus::Paused) => true,
         (QuestStatus::Active, QuestStatus::Completed) => true,
