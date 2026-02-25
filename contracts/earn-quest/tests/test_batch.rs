@@ -1,7 +1,10 @@
 #![cfg(test)]
 
+use soroban_sdk::testutils::Events as _;
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
-use soroban_sdk::{symbol_short, testutils::Address as _, Address, BytesN, Env, Symbol, Vec};
+use soroban_sdk::{
+    symbol_short, testutils::Address as _, Address, BytesN, Env, IntoVal, Symbol, Vec,
+};
 
 extern crate earn_quest;
 use earn_quest::types::{BatchApprovalInput, BatchQuestInput};
@@ -34,7 +37,7 @@ fn setup_contract_and_token(
 }
 
 fn make_quest_input(
-    env: &Env,
+    _env: &Env,
     id: &Symbol,
     reward_asset: &Address,
     reward_amount: i128,
@@ -153,19 +156,20 @@ fn test_register_quests_batch_emits_events() {
     client.register_quests_batch(&creator, &quests);
 
     let events = env.events().all();
-    let reg_events: Vec<_> = events
-        .iter()
-        .filter(|e| {
-            let (topics, _): (soroban_sdk::Vec<soroban_sdk::RawVal>, _) =
-                (e.0.clone(), e.1.clone());
+    let mut reg_count = 0u32;
+    for i in 0..events.len() {
+        let (_addr, topics, _data) = events.get(i).unwrap();
+        if !topics.is_empty() {
             let t0: Symbol = topics.get(0).unwrap().into_val(&env);
-            t0 == symbol_short!("quest_reg")
-        })
-        .collect();
+            if t0 == symbol_short!("quest_reg") {
+                reg_count += 1;
+            }
+        }
+    }
     assert!(
-        reg_events.len() >= 2,
+        reg_count >= 2,
         "expected at least 2 quest_reg events, got {}",
-        reg_events.len()
+        reg_count
     );
 }
 
@@ -331,17 +335,18 @@ fn test_approve_submissions_batch_emits_events() {
     client.approve_submissions_batch(&verifier, &submissions);
 
     let events = env.events().all();
-    let appr_events: Vec<_> = events
-        .iter()
-        .filter(|e| {
-            let (topics, _): (soroban_sdk::Vec<soroban_sdk::RawVal>, _) =
-                (e.0.clone(), e.1.clone());
+    let mut appr_count = 0u32;
+    for i in 0..events.len() {
+        let (_addr, topics, _data) = events.get(i).unwrap();
+        if !topics.is_empty() {
             let t0: Symbol = topics.get(0).unwrap().into_val(&env);
-            t0 == symbol_short!("sub_appr")
-        })
-        .collect();
+            if t0 == symbol_short!("sub_appr") {
+                appr_count += 1;
+            }
+        }
+    }
     assert!(
-        appr_events.len() >= 1,
+        appr_count >= 1,
         "expected at least 1 submission_approved event"
     );
 }

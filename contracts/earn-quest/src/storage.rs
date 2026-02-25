@@ -1,5 +1,5 @@
 use crate::errors::Error;
-use crate::types::{Quest, QuestStatus, Submission, SubmissionStatus, UserStats};
+use crate::types::{EscrowInfo, Quest, QuestStatus, Submission, SubmissionStatus, UserStats};
 use soroban_sdk::{contracttype, Address, Env, Symbol, Vec};
 
 /// Storage key definitions for the contract's persistent data.
@@ -568,13 +568,11 @@ pub fn set_unpause_approval(env: &Env, admin: &Address, approved: bool) {
                 .set(&DataKey::UnpauseApproval(admin.clone()), &true);
             inc_unpause_approval_count(env);
         }
-    } else {
-        if has_unpause_approval(env, admin) {
-            env.storage()
-                .instance()
-                .remove(&DataKey::UnpauseApproval(admin.clone()));
-            dec_unpause_approval_count(env);
-        }
+    } else if has_unpause_approval(env, admin) {
+        env.storage()
+            .instance()
+            .remove(&DataKey::UnpauseApproval(admin.clone()));
+        dec_unpause_approval_count(env);
     }
 }
 
@@ -653,9 +651,7 @@ fn dec_unpause_approval_count(env: &Env) {
         .instance()
         .get(&DataKey::UnpauseApprovalCount)
         .unwrap_or(0u32);
-    if cur > 0 {
-        cur -= 1;
-    }
+    cur = cur.saturating_sub(1);
     env.storage()
         .instance()
         .set(&DataKey::UnpauseApprovalCount, &cur);
@@ -685,4 +681,11 @@ pub fn set_escrow(env: &Env, quest_id: &Symbol, escrow: &EscrowInfo) {
     env.storage()
         .instance()
         .set(&DataKey::Escrow(quest_id.clone()), escrow);
+}
+
+/// Delete escrow record for a quest (cleanup after terminal state)
+pub fn delete_escrow(env: &Env, quest_id: &Symbol) {
+    env.storage()
+        .instance()
+        .remove(&DataKey::Escrow(quest_id.clone()));
 }

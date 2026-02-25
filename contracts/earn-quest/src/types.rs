@@ -106,4 +106,8 @@ pub struct EscrowInfo {
     pub total_refunded: i128,
     /// Whether this escrow is still active
     pub is_active: bool,
+    /// Ledger timestamp when the escrow was first created
+    pub created_at: u64,
+    /// Number of deposits made (1 = initial, >1 = top-ups)
+    pub deposit_count: u32,
 }
