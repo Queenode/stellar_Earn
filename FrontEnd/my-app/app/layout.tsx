@@ -10,6 +10,8 @@ import { AnalyticsProvider } from "@/app/providers/AnalyticsProvider";
 import { ConsentBanner } from "@/components/analytics/ConsentBanner";
 import { SkipToContent } from "@/components/a11y/SkipToContent";
 import { A11yAnnouncerProvider } from "@/components/a11y/A11yAnnouncer";
+import PerformanceMonitor from "@/components/ui/PerformanceMonitor";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,10 +48,29 @@ export default function RootLayout({
     })();
   `;
 
+  const swRegistrationScript = `
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').then(
+          function(registration) {
+            console.log('Service Worker registration successful with scope: ', registration.scope);
+          },
+          function(err) {
+            console.log('Service Worker registration failed: ', err);
+          }
+        );
+      });
+    }
+  `;
+
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: swRegistrationScript }} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -60,7 +81,8 @@ export default function RootLayout({
               <AnalyticsProvider>
                 <ToastProvider>
                   <SkipToContent />
-                  <AppLayout>{children}</AppLayout>
+                  {children}
+                  <PerformanceMonitor />
                   <ConsentBanner />
                   <WalletModal />
                 </ToastProvider>

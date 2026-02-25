@@ -59,11 +59,8 @@ pub fn deposit(
 
     // Transfer tokens: creator → contract
     let token_client = token::Client::new(env, token_address);
-    let transfer_result = token_client.try_transfer(
-        depositor,
-        &env.current_contract_address(),
-        &amount,
-    );
+    let transfer_result =
+        token_client.try_transfer(depositor, &env.current_contract_address(), &amount);
 
     match transfer_result {
         Ok(Ok(_)) => {}
@@ -108,11 +105,7 @@ pub fn deposit(
 /// Returns Ok if the quest's escrow can cover the given amount.
 /// Returns Err(EscrowNotFound) if no escrow exists.
 /// Returns Err(InsufficientEscrow) if balance is too low.
-pub fn validate_sufficient(
-    env: &Env,
-    quest_id: &Symbol,
-    amount: i128,
-) -> Result<(), Error> {
+pub fn validate_sufficient(env: &Env, quest_id: &Symbol, amount: i128) -> Result<(), Error> {
     let escrow = storage::get_escrow(env, quest_id)?;
 
     if !escrow.is_active {
@@ -232,11 +225,7 @@ fn refund_remaining(env: &Env, quest_id: &Symbol) -> Result<i128, Error> {
 /// Quest.status = Cancelled
 /// Remaining escrow → Creator's wallet
 /// ```
-pub fn cancel_quest(
-    env: &Env,
-    quest_id: &Symbol,
-    caller: &Address,
-) -> Result<i128, Error> {
+pub fn cancel_quest(env: &Env, quest_id: &Symbol, caller: &Address) -> Result<i128, Error> {
     let quest = storage::get_quest(env, quest_id)?;
 
     // Only creator can cancel
@@ -282,11 +271,7 @@ pub fn cancel_quest(
 /// ```text
 /// Remaining escrow → Creator's wallet
 /// ```
-pub fn withdraw_unclaimed(
-    env: &Env,
-    quest_id: &Symbol,
-    caller: &Address,
-) -> Result<i128, Error> {
+pub fn withdraw_unclaimed(env: &Env, quest_id: &Symbol, caller: &Address) -> Result<i128, Error> {
     let quest = storage::get_quest(env, quest_id)?;
 
     // Only creator can withdraw

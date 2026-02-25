@@ -12,6 +12,7 @@ import { mockQuests } from "@/lib/mock/quests";
 import { QuestStatus, QuestDifficulty } from "@/lib/types/quest";
 import type { Quest } from "@/lib/types/quest";
 import { AppLayout } from "@/components/layout/AppLayout";
+import LazyLoad from "@/components/ui/LazyLoad";
 
 function QuestsContent() {
   const searchParams = useSearchParams();
@@ -22,14 +23,14 @@ function QuestsContent() {
   const statusParam = searchParams.get("status");
   const statusFilter =
     statusParam &&
-    Object.values(QuestStatus).includes(statusParam as QuestStatus)
+      Object.values(QuestStatus).includes(statusParam as QuestStatus)
       ? (statusParam as QuestStatus)
       : undefined;
 
   const difficultyParam = searchParams.get("difficulty");
   const difficultyFilter =
     difficultyParam &&
-    Object.values(QuestDifficulty).includes(difficultyParam as QuestDifficulty)
+      Object.values(QuestDifficulty).includes(difficultyParam as QuestDifficulty)
       ? (difficultyParam as QuestDifficulty)
       : undefined;
 
@@ -195,14 +196,16 @@ function QuestsContent() {
 
         {/* Quest List */}
         <div className="mb-6" data-onboarding="quest-board-list">
-          <QuestList
-            quests={paginatedQuests}
-            isLoading={false}
-            error={null}
-            onQuestClick={handleQuestClick}
-            hasActiveFilters={hasActiveFilters}
-            onClearFilters={handleClearFilters}
-          />
+          <LazyLoad>
+            <QuestList
+              quests={paginatedQuests}
+              isLoading={false}
+              error={null}
+              onQuestClick={handleQuestClick}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={handleClearFilters}
+            />
+          </LazyLoad>
         </div>
 
         {/* Pagination logic */}

@@ -232,8 +232,12 @@ fn test_register_quests_batch_duplicate_in_batch_reverts() {
     assert!(res.is_err(), "duplicate id in batch should revert");
 
     // First quest should not be stored (entire batch reverted)
-    let res2 = client.try_register_quest(&id, &creator, &token_contract, &100, &verifier, &deadline);
-    assert!(res2.is_ok(), "quest DUP should not exist after reverted batch");
+    let res2 =
+        client.try_register_quest(&id, &creator, &token_contract, &100, &verifier, &deadline);
+    assert!(
+        res2.is_ok(),
+        "quest DUP should not exist after reverted batch"
+    );
 }
 
 //================================================================================
@@ -458,5 +462,8 @@ fn test_batch_registration_same_state_as_single_calls() {
         &verifier,
         &deadline,
     );
-    assert!(res1.is_err() && res2.is_err(), "both quests should already exist");
+    assert!(
+        res1.is_err() && res2.is_err(),
+        "both quests should already exist"
+    );
 }

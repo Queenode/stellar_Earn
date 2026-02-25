@@ -8,6 +8,7 @@ import {
   isVideoFile,
   isPdfFile,
 } from '@/lib/validation/submission';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 
 interface ProofPreviewProps {
   proofType: ProofType;
@@ -153,9 +154,12 @@ export function ProofPreview({
             </p>
             <div className="flex items-center gap-4 rounded-md bg-white p-3 dark:bg-zinc-900">
               {filePreviewUrl ? (
-                <img
+                <OptimizedImage
                   src={filePreviewUrl}
                   alt="File preview"
+                  width={80}
+                  height={80}
+                  unoptimized
                   className="h-20 w-20 rounded-lg object-cover"
                 />
               ) : (

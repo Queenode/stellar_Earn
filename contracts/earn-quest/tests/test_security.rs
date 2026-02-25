@@ -1,7 +1,7 @@
 #![cfg(test)]
 
-use soroban_sdk::{testutils::Address as _, Address, Env, symbol_short, BytesN};
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
+use soroban_sdk::{symbol_short, testutils::Address as _, Address, BytesN, Env};
 
 extern crate earn_quest;
 use earn_quest::{EarnQuestContract, EarnQuestContractClient};
@@ -31,7 +31,14 @@ fn test_pause_blocks_register_quest() {
 
     let quest_id = symbol_short!("SQ1");
     // This should panic because contract is paused
-    client.register_quest(&quest_id, &creator, &token_contract, &100, &verifier, &10000);
+    client.register_quest(
+        &quest_id,
+        &creator,
+        &token_contract,
+        &100,
+        &verifier,
+        &10000,
+    );
 }
 
 #[test]
@@ -97,7 +104,14 @@ fn test_multisig_approve_and_unpause_with_zero_timelock() {
     let token_contract = token_contract_obj.address();
 
     let quest_id = symbol_short!("SQ2");
-    client.register_quest(&quest_id, &creator, &token_contract, &100, &verifier, &10000);
+    client.register_quest(
+        &quest_id,
+        &creator,
+        &token_contract,
+        &100,
+        &verifier,
+        &10000,
+    );
 }
 
 #[test]
