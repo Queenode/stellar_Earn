@@ -65,8 +65,15 @@ pub enum Badge {
 // Batch operation input types (gas-optimized multi-item operations)
 //================================================================================
 
+<<<<<<< HEAD
 /// Single quest registration input for batch registration.
 /// Creator is implied from auth in register_quests_batch.
+=======
+/// Platform-wide aggregated statistics.
+///
+/// Updated atomically on every quest creation, submission, and claim.
+/// Queried via `EarnQuestContract::get_platform_stats()`.
+>>>>>>> f4f4415 (fix: format issue)
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BatchQuestInput {
@@ -81,6 +88,7 @@ pub struct BatchQuestInput {
 /// Verifier is implied from auth in approve_submissions_batch.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
+<<<<<<< HEAD
 pub struct BatchApprovalInput {
     pub quest_id: Symbol,
     pub submitter: Address,
@@ -125,4 +133,15 @@ pub struct EscrowInfo {
     pub total_refunded: i128,
     /// Whether this escrow is still active
     pub is_active: bool,
+=======
+pub struct CreatorStats {
+    /// Total quests created by this address.
+    pub quests_created: u64,
+    /// Sum of `reward_amount` across all quests created by this address.
+    pub total_rewards_posted: u128,
+    /// Total submissions received across all of this creator's quests.
+    pub total_submissions_received: u64,
+    /// Total successful claims paid out across all of this creator's quests.
+    pub total_claims_paid: u64,
+>>>>>>> f4f4415 (fix: format issue)
 }

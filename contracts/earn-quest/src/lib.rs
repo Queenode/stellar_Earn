@@ -13,6 +13,8 @@ mod submission;
 pub mod types;
 pub mod validation;
 
+main
+
 use crate::errors::Error;
 use crate::types::{
     Badge, BatchApprovalInput, BatchQuestInput, EscrowInfo, QuestMetadata, UserStats,
