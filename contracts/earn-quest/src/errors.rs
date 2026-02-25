@@ -40,4 +40,11 @@ pub enum Error {
     InvalidAddress = 65,
     QuestExpired = 66,
     QuestNotActive = 67,
+
+    InsufficientEscrow = 70,
+    EscrowNotFound = 71,
+    EscrowInactive = 72,
+    NoFundsToWithdraw = 73,
+    QuestNotTerminal = 74,
+    TokenMismatch = 75,
 }
