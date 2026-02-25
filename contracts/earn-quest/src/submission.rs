@@ -1,10 +1,10 @@
 use crate::errors::Error;
 use crate::events;
 use crate::storage;
+use crate::storage;
 use crate::types::{BatchApprovalInput, Submission, SubmissionStatus};
 use crate::validation;
-use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
-use crate::storage;  // already imported
+use soroban_sdk::{Address, BytesN, Env, Symbol, Vec}; // already imported
 
 /// Submit proof for a quest with full input validation.
 ///

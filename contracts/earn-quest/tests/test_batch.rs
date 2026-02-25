@@ -243,8 +243,12 @@ fn test_register_quests_batch_duplicate_in_batch_reverts() {
     assert!(res.is_err(), "duplicate id in batch should revert");
 
     // First quest should not be stored (entire batch reverted)
-    let res2 = client.try_register_quest(&id, &creator, &token_contract, &100, &verifier, &deadline);
-    assert!(res2.is_ok(), "quest DUP should not exist after reverted batch");
+    let res2 =
+        client.try_register_quest(&id, &creator, &token_contract, &100, &verifier, &deadline);
+    assert!(
+        res2.is_ok(),
+        "quest DUP should not exist after reverted batch"
+    );
 }
 
 //================================================================================
@@ -357,14 +361,7 @@ fn test_approve_submissions_batch_size_limit_enforced() {
     let mut submitters = Vec::new(&env);
     for i in 0u32..51 {
         let sym = Symbol::new(&env, &format!("LQ{:02}", i));
-        client.register_quest(
-            &sym,
-            &creator,
-            &token_contract,
-            &1,
-            &verifier,
-            &deadline,
-        );
+        client.register_quest(&sym, &creator, &token_contract, &1, &verifier, &deadline);
         let sub = Address::generate(&env);
         submitters.push_back(sub.clone());
         client.submit_proof(&sym, &sub, &proof);
@@ -373,10 +370,7 @@ fn test_approve_submissions_batch_size_limit_enforced() {
     let mut submissions = Vec::new(&env);
     for i in 0u32..51 {
         let sym = Symbol::new(&env, &format!("LQ{:02}", i));
-        submissions.push_back(make_approval_input(
-            &sym,
-            &submitters.get(i).unwrap(),
-        ));
+        submissions.push_back(make_approval_input(&sym, &submitters.get(i).unwrap()));
     }
 
     let res = client.try_approve_submissions_batch(&verifier, &submissions);
@@ -477,5 +471,8 @@ fn test_batch_registration_same_state_as_single_calls() {
         &verifier,
         &deadline,
     );
-    assert!(res1.is_err() && res2.is_err(), "both quests should already exist");
+    assert!(
+        res1.is_err() && res2.is_err(),
+        "both quests should already exist"
+    );
 }

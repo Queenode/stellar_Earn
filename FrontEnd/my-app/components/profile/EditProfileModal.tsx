@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { UserProfile, EditProfileData } from '@/lib/types/profile';
+import OptimizedImage from '@/components/ui/OptimizedImage';
+
 
 interface EditProfileModalProps {
   profile: UserProfile;
@@ -11,12 +13,12 @@ interface EditProfileModalProps {
   isUpdating: boolean;
 }
 
-export function EditProfileModal({ 
-  profile, 
-  isOpen, 
-  onClose, 
-  onSave, 
-  isUpdating 
+export function EditProfileModal({
+  profile,
+  isOpen,
+  onClose,
+  onSave,
+  isUpdating
 }: EditProfileModalProps) {
   const [username, setUsername] = useState(profile?.username || '');
   const [bio, setBio] = useState(profile?.bio || '');
@@ -71,9 +73,12 @@ export function EditProfileModal({
               <div className="flex items-center gap-4">
                 <div className="relative">
                   {avatar ? (
-                    <img
+                    <OptimizedImage
                       src={avatar}
                       alt="Preview"
+                      width={64}
+                      height={64}
+                      unoptimized
                       className="w-16 h-16 rounded-full object-cover border-2 border-zinc-700"
                     />
                   ) : (
