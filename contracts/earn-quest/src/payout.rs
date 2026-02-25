@@ -38,3 +38,46 @@ pub fn transfer_reward(
         Err(_) => Err(Error::TransferFailed),     // Cross-contract call error
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ADD below the existing transfer_reward function
+// ═══════════════════════════════════════════════════════════════
+
+use crate::escrow;
+use crate::storage;
+use soroban_sdk::Symbol;
+
+/// Transfer reward with escrow tracking.
+///
+/// If the quest has escrow:
+///   1. Validate escrow has enough funds
+///   2. Transfer tokens (existing logic)
+///   3. Record the deduction in escrow tracking
+///
+/// If the quest has no escrow:
+///   Falls back to existing transfer_reward behavior.
+///   (backward compatible with quests created before escrow feature)
+pub fn transfer_reward_from_escrow(
+    env: &Env,
+    quest_id: &Symbol,
+    reward_asset: &Address,
+    to: &Address,
+    amount: i128,
+) -> Result<(), Error> {
+    let has_escrow = storage::has_escrow(env, quest_id);
+
+    // Pre-check: verify escrow has enough
+    if has_escrow {
+        escrow::validate_sufficient(env, quest_id, amount)?;
+    }
+
+    // Actual token transfer (existing logic)
+    transfer_reward(env, reward_asset, to, amount)?;
+
+    // Post-transfer: update escrow accounting
+    if has_escrow {
+        escrow::record_payout(env, quest_id, to, amount)?;
+    }
+
+    Ok(())
+}
