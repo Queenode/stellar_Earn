@@ -285,6 +285,16 @@ impl EarnQuestContract {
         escrow::withdraw_unclaimed(&env, &quest_id, &creator)
     }
 
+    /// Expire a quest whose deadline has passed and refund remaining escrow.
+    ///
+    /// # Who can call: Quest creator only
+    /// # Requires: Quest is Active or Paused AND deadline has passed
+    /// # Token flow: Contract → Creator wallet (remaining balance)
+    /// # Returns: Amount refunded
+    pub fn expire_quest(env: Env, quest_id: Symbol, creator: Address) -> Result<i128, Error> {
+        security::require_not_paused(&env)?;
+        creator.require_auth();
+        escrow::expire_quest(&env, &quest_id, &creator)
     /// Update quest metadata (quest creator or admin).
     pub fn update_quest_metadata(
         env: Env,

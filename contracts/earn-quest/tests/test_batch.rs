@@ -1,8 +1,10 @@
 #![cfg(test)]
 
-use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::testutils::Events as _;
-use soroban_sdk::{symbol_short, testutils::Address as _, Address, BytesN, Env, Symbol, TryFromVal, Vec};
+use soroban_sdk::token::{StellarAssetClient, TokenClient};
+use soroban_sdk::{
+    symbol_short, testutils::Address as _, Address, BytesN, Env, IntoVal, Symbol, Vec,
+};
 
 extern crate earn_quest;
 use earn_quest::types::{BatchApprovalInput, BatchQuestInput};
@@ -143,6 +145,20 @@ fn test_register_quests_batch_emits_events() {
     client.register_quests_batch(&creator, &quests);
 
     let events = env.events().all();
+    let mut reg_count = 0u32;
+    for i in 0..events.len() {
+        let (_addr, topics, _data) = events.get(i).unwrap();
+        if !topics.is_empty() {
+            let t0: Symbol = topics.get(0).unwrap().into_val(&env);
+            if t0 == symbol_short!("quest_reg") {
+                reg_count += 1;
+            }
+        }
+    }
+    assert!(
+        reg_count >= 2,
+        "expected at least 2 quest_reg events, got {}",
+        reg_count
     let reg_events = events
         .iter()
         .filter(|e| {
@@ -320,6 +336,18 @@ fn test_approve_submissions_batch_emits_events() {
     client.approve_submissions_batch(&verifier, &submissions);
 
     let events = env.events().all();
+    let mut appr_count = 0u32;
+    for i in 0..events.len() {
+        let (_addr, topics, _data) = events.get(i).unwrap();
+        if !topics.is_empty() {
+            let t0: Symbol = topics.get(0).unwrap().into_val(&env);
+            if t0 == symbol_short!("sub_appr") {
+                appr_count += 1;
+            }
+        }
+    }
+    assert!(
+        appr_count >= 1,
     let appr_events = events
         .iter()
         .filter(|e| {
