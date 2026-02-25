@@ -44,7 +44,10 @@ const categoryColors: Record<string, string> = {
   Community: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
 };
 
-export function QuestCard({ quest, onClick }: QuestCardProps) {
+import { memo } from 'react';
+import OptimizedImage from '../ui/OptimizedImage';
+
+export const QuestCard = memo(({ quest, onClick }: QuestCardProps) => {
   const handleClick = () => {
     onClick?.(quest);
   };
@@ -142,4 +145,6 @@ export function QuestCard({ quest, onClick }: QuestCardProps) {
       </div>
     </div>
   );
-}
+});
+
+QuestCard.displayName = 'QuestCard';

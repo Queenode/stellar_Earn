@@ -2,19 +2,19 @@
 
 mod admin;
 pub mod errors;
+mod escrow;
 mod events;
-mod security;
 mod payout;
+mod quest;
 mod reputation;
+mod security;
 pub mod storage;
+mod submission;
 pub mod types;
 pub mod validation;
-mod quest;
-mod submission;
-mod escrow; 
 
 use crate::errors::Error;
-use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, UserStats, EscrowInfo};
+use crate::types::{Badge, BatchApprovalInput, BatchQuestInput, EscrowInfo, UserStats};
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Symbol, Vec};
 
 #[contract]
@@ -137,7 +137,13 @@ impl EarnQuestContract {
         let quest = storage::get_quest(&env, &quest_id)?;
 
         // 4. Payout
-        payout::transfer_reward_from_escrow(&env, &quest_id, &quest.reward_asset, &submitter, quest.reward_amount)?;
+        payout::transfer_reward_from_escrow(
+            &env,
+            &quest_id,
+            &quest.reward_asset,
+            &submitter,
+            quest.reward_amount,
+        )?;
         // 5. State Update
         storage::update_submission_status(
             &env,
@@ -206,7 +212,7 @@ impl EarnQuestContract {
         security::emergency_withdraw(&env, &caller, &asset, &to, amount)
     }
 
-     /// Deposit tokens into escrow for a quest.
+    /// Deposit tokens into escrow for a quest.
     ///
     /// The creator sends tokens to the contract, earmarked for this quest.
     /// Can be called multiple times to add more funds (top-up).
@@ -231,11 +237,7 @@ impl EarnQuestContract {
     /// # Requires: Quest is Active or Paused
     /// # Token flow: Contract → Creator wallet (remaining balance)
     /// # Returns: Amount refunded
-    pub fn cancel_quest(
-        env: Env,
-        quest_id: Symbol,
-        creator: Address,
-    ) -> Result<i128, Error> {
+    pub fn cancel_quest(env: Env, quest_id: Symbol, creator: Address) -> Result<i128, Error> {
         security::require_not_paused(&env)?;
         creator.require_auth();
         escrow::cancel_quest(&env, &quest_id, &creator)
@@ -247,11 +249,7 @@ impl EarnQuestContract {
     /// # Requires: Quest is Completed, Expired, or Cancelled
     /// # Token flow: Contract → Creator wallet (remaining balance)
     /// # Returns: Amount withdrawn
-    pub fn withdraw_unclaimed(
-        env: Env,
-        quest_id: Symbol,
-        creator: Address,
-    ) -> Result<i128, Error> {
+    pub fn withdraw_unclaimed(env: Env, quest_id: Symbol, creator: Address) -> Result<i128, Error> {
         security::require_not_paused(&env)?;
         creator.require_auth();
         escrow::withdraw_unclaimed(&env, &quest_id, &creator)

@@ -1,8 +1,8 @@
-use soroban_sdk::{token, Address, Env};
 use crate::errors::Error;
+use soroban_sdk::{token, Address, Env};
 
 /// Transfer rewards from the contract escrow to the user.
-/// 
+///
 /// This function handles the low-level token transfer and ensures
 /// the contract has sufficient balance.
 pub fn transfer_reward(

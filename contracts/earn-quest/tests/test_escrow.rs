@@ -69,9 +69,9 @@ fn register_quest(t: &TestEnv, quest_id: &Symbol) {
         quest_id,
         &t.creator,
         &t.token_address,
-        &1000_i128,  // reward: 1000 per completion
+        &1000_i128, // reward: 1000 per completion
         &t.verifier,
-        &99999_u64,  // far-future deadline
+        &99999_u64, // far-future deadline
     );
 }
 
@@ -95,7 +95,8 @@ fn test_deposit_escrow() {
     assert_eq!(t.token.balance(&t.creator), 100_000);
 
     // Deposit 5000 into escrow
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     // Creator should have 100_000 - 5_000 = 95_000
     assert_eq!(t.token.balance(&t.creator), 95_000);
@@ -125,11 +126,13 @@ fn test_topup_escrow() {
     let qid = symbol_short!("q2");
     register_quest(&t, &qid);
 
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &3000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &3000);
     assert_eq!(t.contract.get_escrow_balance(&qid), 3_000);
 
     // Top up with 2000 more
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &2000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &2000);
     assert_eq!(t.contract.get_escrow_balance(&qid), 5_000);
 
     let info = t.contract.get_escrow_info(&qid);
@@ -147,7 +150,8 @@ fn test_payout_deducts_escrow() {
     register_quest(&t, &qid);
 
     // Deposit enough for at least 1 payout (reward is 1000)
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     // User submits, verifier approves, user claims
     submit_proof(&t, &qid, &t.user_a);
@@ -173,7 +177,8 @@ fn test_multiple_payouts() {
     let t = setup();
     let qid = symbol_short!("q4");
     register_quest(&t, &qid);
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     // User A
     submit_proof(&t, &qid, &t.user_a);
@@ -204,12 +209,15 @@ fn test_insufficient_escrow_blocks_approval() {
     register_quest(&t, &qid);
 
     // Deposit only 500, but reward is 1000 per completion
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &500);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &500);
 
     submit_proof(&t, &qid, &t.user_a);
 
     // Try to approve — should fail because escrow (500) < reward (1000)
-    let result = t.contract.try_approve_submission(&qid, &t.user_a, &t.verifier);
+    let result = t
+        .contract
+        .try_approve_submission(&qid, &t.user_a, &t.verifier);
     assert!(result.is_err());
 }
 
@@ -222,7 +230,8 @@ fn test_cancel_quest_refunds_escrow() {
     let t = setup();
     let qid = symbol_short!("q6");
     register_quest(&t, &qid);
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     // One payout first
     submit_proof(&t, &qid, &t.user_a);
@@ -258,7 +267,9 @@ fn test_stranger_cannot_deposit() {
     register_quest(&t, &qid);
 
     // User A tries to deposit — not the creator
-    let result = t.contract.try_deposit_escrow(&qid, &t.user_a, &t.token_address, &1000);
+    let result = t
+        .contract
+        .try_deposit_escrow(&qid, &t.user_a, &t.token_address, &1000);
     assert!(result.is_err());
 }
 
@@ -271,7 +282,8 @@ fn test_stranger_cannot_cancel() {
     let t = setup();
     let qid = symbol_short!("q8");
     register_quest(&t, &qid);
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     let result = t.contract.try_cancel_quest(&qid, &t.user_a);
     assert!(result.is_err());
@@ -293,10 +305,11 @@ fn test_withdraw_unclaimed_after_expiry() {
         &t.token_address,
         &1000_i128,
         &t.verifier,
-        &100_u64,  // expires at timestamp 100
+        &100_u64, // expires at timestamp 100
     );
 
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     // We need to set quest status to Expired for withdraw to work.
     // In a real scenario, an admin or cron job would update this.
@@ -315,12 +328,15 @@ fn test_cannot_deposit_to_cancelled_quest() {
     let t = setup();
     let qid = symbol_short!("q10");
     register_quest(&t, &qid);
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     t.contract.cancel_quest(&qid, &t.creator);
 
     // Try to deposit after cancel — should fail
-    let result = t.contract.try_deposit_escrow(&qid, &t.creator, &t.token_address, &1000);
+    let result = t
+        .contract
+        .try_deposit_escrow(&qid, &t.creator, &t.token_address, &1000);
     assert!(result.is_err());
 }
 
@@ -333,7 +349,8 @@ fn test_cannot_withdraw_from_active_quest() {
     let t = setup();
     let qid = symbol_short!("q11");
     register_quest(&t, &qid);
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     // Quest is Active — withdraw_unclaimed should fail
     let result = t.contract.try_withdraw_unclaimed(&qid, &t.creator);
@@ -349,7 +366,8 @@ fn test_double_withdrawal_prevented() {
     let t = setup();
     let qid = symbol_short!("q12");
     register_quest(&t, &qid);
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &5000);
 
     // Cancel → refunds everything
     t.contract.cancel_quest(&qid, &t.creator);
@@ -392,7 +410,8 @@ fn test_full_lifecycle() {
     register_quest(&t, &qid);
 
     // 1. Deposit escrow for 3 completions (3 × 1000 = 3000)
-    t.contract.deposit_escrow(&qid, &t.creator, &t.token_address, &3000);
+    t.contract
+        .deposit_escrow(&qid, &t.creator, &t.token_address, &3000);
     assert_eq!(t.contract.get_escrow_balance(&qid), 3_000);
     assert_eq!(t.token.balance(&t.creator), 97_000);
 
@@ -434,7 +453,9 @@ fn test_zero_deposit_rejected() {
     let qid = symbol_short!("q15");
     register_quest(&t, &qid);
 
-    let result = t.contract.try_deposit_escrow(&qid, &t.creator, &t.token_address, &0);
+    let result = t
+        .contract
+        .try_deposit_escrow(&qid, &t.creator, &t.token_address, &0);
     assert!(result.is_err());
 }
 
@@ -455,6 +476,8 @@ fn test_wrong_token_rejected() {
     other_admin_client.mint(&t.creator, &10_000);
 
     // Try to deposit the wrong token
-    let result = t.contract.try_deposit_escrow(&qid, &t.creator, &other_token, &1000);
+    let result = t
+        .contract
+        .try_deposit_escrow(&qid, &t.creator, &other_token, &1000);
     assert!(result.is_err());
 }

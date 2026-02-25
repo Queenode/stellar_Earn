@@ -1,10 +1,10 @@
 use crate::errors::Error;
 use crate::events;
 use crate::storage;
+use crate::storage;
 use crate::types::{BatchApprovalInput, Submission, SubmissionStatus};
 use crate::validation;
-use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
-use crate::storage;  // already imported
+use soroban_sdk::{Address, BytesN, Env, Symbol, Vec}; // already imported
 
 /// Submit proof for a quest with full input validation.
 ///
@@ -95,11 +95,7 @@ pub fn approve_submission(
 /// - Submission is not already paid (AlreadyClaimed)
 /// - Submission status transition (Approved -> Paid) is valid
 /// - Quest claims have not exceeded the limit
-pub fn validate_claim(
-    env: &Env,
-    quest_id: &Symbol,
-    submitter: &Address,
-) -> Result<(), Error> {
+pub fn validate_claim(env: &Env, quest_id: &Symbol, submitter: &Address) -> Result<(), Error> {
     let quest = storage::get_quest(env, quest_id)?;
     let submission = storage::get_submission(env, quest_id, submitter)?;
 
@@ -109,10 +105,7 @@ pub fn validate_claim(
     }
 
     // Validate status transition: Approved -> Paid
-    validation::validate_submission_status_transition(
-        &submission.status,
-        &SubmissionStatus::Paid,
-    )?;
+    validation::validate_submission_status_transition(&submission.status, &SubmissionStatus::Paid)?;
 
     // Validate quest claims limit
     validation::validate_quest_claims_limit(quest.total_claims)?;

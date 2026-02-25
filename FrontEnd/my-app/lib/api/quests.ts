@@ -1,4 +1,6 @@
 import type { Quest, QuestFilters, PaginationParams, PaginatedResponse } from '@/lib/types/quest';
+import { cacheManager } from '@/lib/utils/cache';
+
 
 /**
  * Get quests with optional filters and pagination
@@ -37,22 +39,19 @@ export async function getQuests(
  * Get a single quest by ID
  */
 export async function getQuestById(id: string): Promise<Quest> {
-  // TODO: Replace with actual API call
-  // const response = await fetch(`/api/quests/${id}`);
-  // if (!response.ok) throw new Error('Failed to fetch quest');
-  // return response.json();
+  return cacheManager.get(`quest-${id}`, async () => {
+    // For now, use mock data
+    const { getMockQuests } = await import('@/lib/mock/quests');
+    const quests = getMockQuests();
+    const quest = quests.find((q) => q.id === id);
 
-  // For now, use mock data
-  const { getMockQuests } = await import('@/lib/mock/quests');
-  const quests = getMockQuests();
-  const quest = quests.find((q) => q.id === id);
-  
-  if (!quest) {
-    throw new Error('Quest not found');
-  }
+    if (!quest) {
+      throw new Error('Quest not found');
+    }
 
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  
-  return quest;
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    return quest;
+  }, 60000); // Cache for 1 minute
 }

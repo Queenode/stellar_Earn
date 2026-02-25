@@ -624,15 +624,15 @@ pub fn set_scheduled_unpause_time(env: &Env, ts: u64) {
 }
 
 pub fn get_scheduled_unpause_time(env: &Env) -> Option<u64> {
-    env.storage()
-        .instance()
-        .get(&DataKey::ScheduledUnpauseTime)
+    env.storage().instance().get(&DataKey::ScheduledUnpauseTime)
 }
 
 pub fn clear_unpause_approvals(env: &Env) {
     // There's no easy iteration to remove all UnpauseApproval keys.
     // The higher level security module will simply leave entries; remove scheduled time and paused flag.
-    env.storage().instance().remove(&DataKey::ScheduledUnpauseTime);
+    env.storage()
+        .instance()
+        .remove(&DataKey::ScheduledUnpauseTime);
 }
 
 fn inc_unpause_approval_count(env: &Env) {
@@ -642,7 +642,9 @@ fn inc_unpause_approval_count(env: &Env) {
         .get(&DataKey::UnpauseApprovalCount)
         .unwrap_or(0u32);
     cur = cur.saturating_add(1);
-    env.storage().instance().set(&DataKey::UnpauseApprovalCount, &cur);
+    env.storage()
+        .instance()
+        .set(&DataKey::UnpauseApprovalCount, &cur);
 }
 
 fn dec_unpause_approval_count(env: &Env) {
@@ -654,7 +656,9 @@ fn dec_unpause_approval_count(env: &Env) {
     if cur > 0 {
         cur -= 1;
     }
-    env.storage().instance().set(&DataKey::UnpauseApprovalCount, &cur);
+    env.storage()
+        .instance()
+        .set(&DataKey::UnpauseApprovalCount, &cur);
 }
 
 //================================================================================

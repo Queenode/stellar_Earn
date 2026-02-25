@@ -1,8 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { isActiveRoute, navigationItems } from "@/lib/config/navigation";
+import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { LevelBadge } from '@/components/reputation/LevelBadge';
+import OptimizedImage from '@/components/ui/OptimizedImage';
+
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -28,53 +31,84 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
       }`}
     >
       <div
-        className={`flex h-16 items-center border-b border-zinc-200 dark:border-zinc-800 ${
-          collapsed ? "justify-center px-2" : "justify-start px-5"
-        }`}
+        className={`fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-zinc-200 bg-white transition-transform dark:border-zinc-800 dark:bg-zinc-900 lg:relative lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
-        <Link
-          aria-label="Go to home"
-          className="flex items-center gap-2 overflow-hidden"
-          href="/"
-        >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#089ec3] text-sm font-bold text-white">
-            S
+        {/* Logo */}
+        <div className="flex items-center gap-2 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ backgroundColor: '#089ec3' }}>
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            StellarEarn
           </span>
-          {!collapsed && (
-            <span className="text-base font-semibold text-zinc-800 dark:text-zinc-100">
-              Stellar Earn
-            </span>
-          )}
-        </Link>
-      </div>
+        </div>
 
-      <nav className="flex-1 space-y-1 p-3" role="navigation">
-        {navigationItems.map((item) => {
-          const active = isActiveRoute(pathname, item);
-          return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={`group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#089ec3] ${
-                active
-                  ? "bg-[#089ec3] text-white"
-                  : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-              }`}
-              href={item.href}
-              key={item.href}
-              title={collapsed ? item.label : undefined}
-            >
-              <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                <NavIcon active={active} />
-              </span>
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 px-3 py-4">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setIsMobileOpen(false)}
+                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors ${isActive
+                  ? 'text-white'
+                  : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
+                  }`}
+                style={isActive ? { backgroundColor: '#089ec3' } : {}}
+              >
+                <Icon />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
 
-      <div className="border-t border-zinc-200 p-3 dark:border-zinc-800">
-        <span className="block text-xs text-zinc-500 dark:text-zinc-400">Navigation</span>
+        {/* User Profile */}
+        <div className="border-t border-zinc-200 px-6 py-4 dark:border-zinc-800">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium text-white" style={{ backgroundColor: '#089ec3' }}>
+              {user.avatar ? (
+                <OptimizedImage
+                  src={user.avatar}
+                  alt={user.name}
+                  width={40}
+                  height={40}
+                  containerClassName="h-full w-full rounded-full"
+                  className="h-full w-full rounded-full"
+                />
+              ) : (
+                <span>{user.name.split('.').map(n => n[0]).join('').toUpperCase()}</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50 truncate">
+                {user.name}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <LevelBadge level={user.level} size="sm" />
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Level {user.level}
+                </span>
+              </div>
+            </div>
+          </div>
+          <Link
+            href="/signout"
+            className="mt-4 flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Sign Out
+          </Link>
+        </div>
       </div>
-    </aside>
+    </>
   );
 }
