@@ -99,7 +99,10 @@ impl EarnQuestContract {
     ) -> Result<(), Error> {
         security::require_not_paused(&env)?;
         creator.require_auth();
-
+        validation::validate_symbol_length(&id)?;
+        validation::validate_addresses_distinct(&creator, &verifier)?;
+        validation::validate_reward_amount(reward_amount)?;
+        validation::validate_deadline(&env, deadline)?;
         quest::register_quest(
             &env,
             &id,
@@ -124,7 +127,10 @@ impl EarnQuestContract {
     ) -> Result<(), Error> {
         security::require_not_paused(&env)?;
         creator.require_auth();
-
+        validation::validate_symbol_length(&id)?;
+        validation::validate_addresses_distinct(&creator, &verifier)?;
+        validation::validate_reward_amount(reward_amount)?;
+        validation::validate_deadline(&env, deadline)?;
         quest::register_quest_with_metadata(
             &env,
             &id,
@@ -147,7 +153,7 @@ impl EarnQuestContract {
     ) -> Result<(), Error> {
         security::require_not_paused(&env)?;
         creator.require_auth();
-
+        validation::validate_array_length(quests.len() as u32, validation::MAX_BATCH_QUEST_REGISTRATION)?;
         quest::register_quests_batch(&env, &creator, &quests)
     }
 

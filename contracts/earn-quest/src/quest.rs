@@ -70,17 +70,19 @@ pub fn register_quest(
         deadline,
     );
 
-    Ok(())
+            validation::validate_symbol_length(id)?;
 }
 
 /// Register a new quest and store metadata in the same transaction.
 pub fn register_quest_with_metadata(
     env: &Env,
-    id: &Symbol,
+            validation::validate_reward_amount(reward_amount)?;
     creator: &Address,
-    reward_asset: &Address,
+            validation::validate_deadline(env, deadline)?;
     reward_amount: i128,
-    verifier: &Address,
+            validation::validate_addresses_distinct(creator, verifier)?;
+            // Validate asset address
+            validation::validate_addresses_distinct(creator, reward_asset)?;
     deadline: u64,
     metadata: &QuestMetadata,
 ) -> Result<(), Error> {
@@ -100,17 +102,19 @@ pub fn register_quest_with_metadata(
 
 //================================================================================
 // Batch registration (gas-optimized)
-//================================================================================
+        validation::validate_symbol_length(id)?;
 
 /// Register multiple quests in a single transaction.
 ///
 /// Validates batch size, then processes each item in order. On first validation
 /// or storage error, the entire batch is reverted (no partial state). Events are
-/// emitted for each successfully processed quest before the next is applied.
+        validation::validate_reward_amount(reward_amount)?;
 ///
-/// # Arguments
+        validation::validate_deadline(env, deadline)?;
 /// * `env` - Contract environment
-/// * `creator` - Must match auth; creator for all quests in the batch
+        validation::validate_addresses_distinct(creator, verifier)?;
+        // Validate asset address
+        validation::validate_addresses_distinct(creator, reward_asset)?;
 /// * `quests` - List of quest inputs (id, reward_asset, reward_amount, verifier, deadline)
 ///
 /// # Returns
@@ -133,7 +137,7 @@ pub fn register_quests_batch(
             &q.reward_asset,
             q.reward_amount,
             &q.verifier,
-            q.deadline,
+                validation::validate_batch_quest_size(len)?;
         )?;
     }
 
@@ -146,6 +150,13 @@ pub fn update_quest_metadata(
     env: &Env,
     quest_id: &Symbol,
     updater: &Address,
+                for quest in quests.iter() {
+                    validation::validate_symbol_length(&quest.id)?;
+                    validation::validate_reward_amount(quest.reward_amount)?;
+                    validation::validate_deadline(env, quest.deadline)?;
+                    validation::validate_addresses_distinct(&quest.creator, &quest.verifier)?;
+                    validation::validate_addresses_distinct(&quest.creator, &quest.reward_asset)?;
+                }
     metadata: &QuestMetadata,
 ) -> Result<(), Error> {
     let quest = storage::get_quest(env, quest_id)?;
