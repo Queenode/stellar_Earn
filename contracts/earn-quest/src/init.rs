@@ -1,7 +1,5 @@
-//! Initialization logic for earn-quest contract
-
-use soroban_sdk::{Env, Address};
-use crate::storage::{set_admin, set_version, set_config, is_initialized, mark_initialized};
+use crate::storage;
+use soroban_sdk::{Address, Env, String, Vec};
 
 pub struct InitConfig {
     pub admin: Address,
@@ -10,16 +8,17 @@ pub struct InitConfig {
 }
 
 pub fn initialize(env: &Env, config: InitConfig) {
-    if is_initialized(env) {
+    if storage::is_initialized(env) {
         panic!("Contract already initialized");
     }
-    set_admin(env, &config.admin);
-    set_version(env, config.version);
-    set_config(env, &config.config_params);
-    mark_initialized(env);
+    storage::set_contract_admin(env, &config.admin);
+    storage::set_admin(env, &config.admin);
+    storage::set_version(env, config.version);
+    storage::set_config(env, &config.config_params);
+    storage::mark_initialized(env);
 }
 
 pub fn upgrade_authorize(env: &Env, caller: &Address) -> bool {
-    let admin = crate::storage::get_admin(env);
+    let admin = storage::get_admin(env);
     caller == &admin
 }
