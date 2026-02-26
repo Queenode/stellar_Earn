@@ -1,6 +1,9 @@
 use crate::errors::Error;
-use crate::types::{EscrowInfo, Quest, QuestStatus, Submission, SubmissionStatus, UserStats};
-use soroban_sdk::{contracttype, Address, Env, Symbol, Vec};
+use crate::types::{
+    CreatorStats, EscrowInfo, PlatformStats, Quest, QuestStatus, Submission, SubmissionStatus,
+    UserStats,
+};
+use soroban_sdk::{contracttype, Address, Env, String, Symbol, Vec};
 
 /// Storage key definitions for the contract's persistent data.
 ///
@@ -41,6 +44,9 @@ pub enum DataKey {
     /// Scheduled unpause ledger timestamp
     ScheduledUnpauseTime,
     Escrow(Symbol),
+    QuestIds,
+    PlatformStats,
+    CreatorStats(Address),
 }
 
 //================================================================================
@@ -748,4 +754,113 @@ pub fn delete_escrow(env: &Env, quest_id: &Symbol) {
     env.storage()
         .instance()
         .remove(&DataKey::Escrow(quest_id.clone()));
+}
+
+//================================================================================
+// Contract Initialization Storage
+//================================================================================
+
+pub fn is_initialized(env: &Env) -> bool {
+    env.storage().instance().has(&DataKey::Initialized)
+}
+
+pub fn mark_initialized(env: &Env) {
+    env.storage().instance().set(&DataKey::Initialized, &true);
+}
+
+pub fn get_admin(env: &Env) -> Address {
+    env.storage()
+        .instance()
+        .get(&DataKey::ContractAdmin)
+        .expect("Contract not initialized")
+}
+
+pub fn set_contract_admin(env: &Env, address: &Address) {
+    env.storage()
+        .instance()
+        .set(&DataKey::ContractAdmin, address);
+}
+
+pub fn get_version(env: &Env) -> u32 {
+    env.storage()
+        .instance()
+        .get(&DataKey::ContractVersion)
+        .unwrap_or(0u32)
+}
+
+pub fn set_version(env: &Env, version: u32) {
+    env.storage()
+        .instance()
+        .set(&DataKey::ContractVersion, &version);
+}
+
+pub fn get_config(env: &Env) -> Vec<(String, String)> {
+    env.storage()
+        .instance()
+        .get(&DataKey::ContractConfig)
+        .unwrap_or_else(|| Vec::new(env))
+}
+
+pub fn set_config(env: &Env, config: &Vec<(String, String)>) {
+    env.storage()
+        .instance()
+        .set(&DataKey::ContractConfig, config);
+}
+
+//================================================================================
+// Quest Index (for query/filtering support)
+//================================================================================
+
+pub fn get_quest_ids(env: &Env) -> Vec<Symbol> {
+    env.storage()
+        .instance()
+        .get(&DataKey::QuestIds)
+        .unwrap_or_else(|| Vec::new(env))
+}
+
+pub fn add_quest_id(env: &Env, id: &Symbol) {
+    let mut ids = get_quest_ids(env);
+    ids.push_back(id.clone());
+    env.storage().instance().set(&DataKey::QuestIds, &ids);
+}
+
+//================================================================================
+// Platform & Creator Stats Storage
+//================================================================================
+
+pub fn get_platform_stats(env: &Env) -> PlatformStats {
+    env.storage()
+        .instance()
+        .get(&DataKey::PlatformStats)
+        .unwrap_or(PlatformStats {
+            total_quests_created: 0,
+            total_submissions: 0,
+            total_rewards_distributed: 0,
+            total_active_users: 0,
+            total_rewards_claimed: 0,
+        })
+}
+
+pub fn set_platform_stats(env: &Env, stats: &PlatformStats) {
+    env.storage()
+        .instance()
+        .set(&DataKey::PlatformStats, stats);
+}
+
+pub fn get_creator_stats(env: &Env, creator: &Address) -> CreatorStats {
+    env.storage()
+        .instance()
+        .get(&DataKey::CreatorStats(creator.clone()))
+        .unwrap_or(CreatorStats {
+            quests_created: 0,
+            total_rewards_posted: 0,
+            total_submissions_received: 0,
+            total_claims_paid: 0,
+        })
+}
+
+pub fn set_creator_stats(env: &Env, creator: &Address, stats: &CreatorStats) {
+    env.storage()
+        .instance()
+        .set(&DataKey::CreatorStats(creator.clone()), stats);
 }

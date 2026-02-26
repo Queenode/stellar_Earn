@@ -127,4 +127,3 @@ pub fn badge_granted(env: &Env, user: Address, badge: Badge) {
     let data = (badge,);
     env.events().publish(topics, data);
 }
-main

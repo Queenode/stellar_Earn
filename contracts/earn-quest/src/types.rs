@@ -133,14 +133,23 @@ pub struct EscrowInfo {
     pub created_at: u64,
     /// Number of deposits made (1 = initial, >1 = top-ups)
     pub deposit_count: u32,
-pub struct CreatorStats {
-    /// Total quests created by this address.
-    pub quests_created: u64,
-    /// Sum of `reward_amount` across all quests created by this address.
-    pub total_rewards_posted: u128,
-    /// Total submissions received across all of this creator's quests.
-    pub total_submissions_received: u64,
-    /// Total successful claims paid out across all of this creator's quests.
-    pub total_claims_paid: u64,
+}
 
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CreatorStats {
+    pub quests_created: u64,
+    pub total_rewards_posted: u128,
+    pub total_submissions_received: u64,
+    pub total_claims_paid: u64,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PlatformStats {
+    pub total_quests_created: u64,
+    pub total_submissions: u64,
+    pub total_rewards_distributed: u128,
+    pub total_active_users: u64,
+    pub total_rewards_claimed: u64,
 }
