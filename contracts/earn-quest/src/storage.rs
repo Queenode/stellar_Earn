@@ -1,6 +1,11 @@
 use crate::errors::Error;
 use crate::types::{Quest, QuestStatus, Submission, SubmissionStatus, UserStats, EscrowInfo};
 use soroban_sdk::{contracttype, Address, Env, Symbol, Vec};
+use crate::types::{
+    CreatorStats, EscrowInfo, PlatformStats, Quest, QuestStatus, Submission, SubmissionStatus,
+    UserStats,
+};
+use soroban_sdk::{contracttype, Address, Env, String, Symbol, Vec};
 
 /// Storage key definitions for the contract's persistent data.
 ///
@@ -10,25 +15,40 @@ use soroban_sdk::{contracttype, Address, Env, Symbol, Vec};
 pub enum DataKey {
     /// Stores individual Quest data, keyed by quest ID (Symbol)
     Quest(Symbol),
+    /// Stores quest metadata, keyed by quest ID (Symbol)
+    QuestMetadata(Symbol),
     /// Stores individual Submission data, keyed by quest ID and submitter address
     Submission(Symbol, Address),
     /// Stores UserStats data, keyed by user address
     UserStats(Address),
     /// Stores admin status, keyed by admin address
     Admin(Address),
+    /// Stores contract admin (single)
+    ContractAdmin,
+    /// Stores contract version
+    ContractVersion,
+    /// Stores contract config params
+    ContractConfig,
+    /// Tracks initialization
+    Initialized,
     /// Global paused flag
     Paused,
-    /// Stores per-admin approval for unpause
-    UnpauseApproval(Address),
+    /// Stores per-admin approval for unpause in a specific round
+    UnpauseApproval(u32, Address),
     /// Number of approvals required to unpause
     UnpauseThreshold,
-    /// Count of approvals recorded
+    /// Current unpause cycle/round ID
+    UnpauseRound,
+    /// Count of approvals recorded in current round
     UnpauseApprovalCount,
     /// Timelock seconds to wait after approvals before unpause can be executed
     UnpauseTimelockSeconds,
     /// Scheduled unpause ledger timestamp
     ScheduledUnpauseTime,
     Escrow(Symbol),
+    QuestIds,
+    PlatformStats,
+    CreatorStats(Address),
 }
 
 //================================================================================
@@ -89,6 +109,28 @@ pub fn set_quest(env: &Env, id: &Symbol, quest: &Quest) {
     env.storage()
         .instance()
         .set(&DataKey::Quest(id.clone()), quest);
+}
+
+/// Checks if metadata exists for a quest.
+pub fn has_quest_metadata(env: &Env, id: &Symbol) -> bool {
+    env.storage()
+        .instance()
+        .has(&DataKey::QuestMetadata(id.clone()))
+}
+
+/// Gets metadata for a quest, if present.
+pub fn get_quest_metadata(env: &Env, id: &Symbol) -> Result<QuestMetadata, Error> {
+    env.storage()
+        .instance()
+        .get(&DataKey::QuestMetadata(id.clone()))
+        .ok_or(Error::MetadataNotFound)
+}
+
+/// Stores metadata for a quest.
+pub fn set_quest_metadata(env: &Env, id: &Symbol, metadata: &QuestMetadata) {
+    env.storage()
+        .instance()
+        .set(&DataKey::QuestMetadata(id.clone()), metadata);
 }
 
 //================================================================================
@@ -258,6 +300,9 @@ pub fn delete_quest(env: &Env, id: &Symbol) -> Result<(), Error> {
     }
 
     env.storage().instance().remove(&DataKey::Quest(id.clone()));
+    env.storage()
+        .instance()
+        .remove(&DataKey::QuestMetadata(id.clone()));
     Ok(())
 }
 
@@ -558,30 +603,46 @@ pub fn is_paused(env: &Env) -> bool {
     env.storage().instance().has(&DataKey::Paused)
 }
 
-/// Approve or revoke unpause by admin
+/// Approve or revoke unpause by admin for the current round
 pub fn set_unpause_approval(env: &Env, admin: &Address, approved: bool) {
+    let round = get_unpause_round(env);
     if approved {
-        // If not already approved, set and increment counter
+        // If not already approved in this round, set and increment counter
         if !has_unpause_approval(env, admin) {
             env.storage()
                 .instance()
-                .set(&DataKey::UnpauseApproval(admin.clone()), &true);
+                .set(&DataKey::UnpauseApproval(round, admin.clone()), &true);
             inc_unpause_approval_count(env);
         }
     } else {
         if has_unpause_approval(env, admin) {
             env.storage()
                 .instance()
-                .remove(&DataKey::UnpauseApproval(admin.clone()));
+                .remove(&DataKey::UnpauseApproval(round, admin.clone()));
             dec_unpause_approval_count(env);
         }
     }
 }
 
 pub fn has_unpause_approval(env: &Env, admin: &Address) -> bool {
+    let round = get_unpause_round(env);
     env.storage()
         .instance()
-        .has(&DataKey::UnpauseApproval(admin.clone()))
+        .has(&DataKey::UnpauseApproval(round, admin.clone()))
+}
+
+pub fn get_unpause_round(env: &Env) -> u32 {
+    env.storage()
+        .instance()
+        .get(&DataKey::UnpauseRound)
+        .unwrap_or(0u32)
+}
+
+pub fn inc_unpause_round(env: &Env) {
+    let cur = get_unpause_round(env);
+    env.storage()
+        .instance()
+        .set(&DataKey::UnpauseRound, &cur.saturating_add(1));
 }
 
 pub fn count_unpause_approvals(env: &Env) -> u32 {
@@ -624,15 +685,20 @@ pub fn set_scheduled_unpause_time(env: &Env, ts: u64) {
 }
 
 pub fn get_scheduled_unpause_time(env: &Env) -> Option<u64> {
-    env.storage()
-        .instance()
-        .get(&DataKey::ScheduledUnpauseTime)
+    env.storage().instance().get(&DataKey::ScheduledUnpauseTime)
 }
 
 pub fn clear_unpause_approvals(env: &Env) {
-    // There's no easy iteration to remove all UnpauseApproval keys.
-    // The higher level security module will simply leave entries; remove scheduled time and paused flag.
-    env.storage().instance().remove(&DataKey::ScheduledUnpauseTime);
+    // Increment the round ID so previous approvals are effectively cleared/invalidated
+    inc_unpause_round(env);
+    // Reset the count for the new round
+    env.storage()
+        .instance()
+        .set(&DataKey::UnpauseApprovalCount, &0u32);
+    // Remove scheduled time
+    env.storage()
+        .instance()
+        .remove(&DataKey::ScheduledUnpauseTime);
 }
 
 fn inc_unpause_approval_count(env: &Env) {
@@ -642,7 +708,9 @@ fn inc_unpause_approval_count(env: &Env) {
         .get(&DataKey::UnpauseApprovalCount)
         .unwrap_or(0u32);
     cur = cur.saturating_add(1);
-    env.storage().instance().set(&DataKey::UnpauseApprovalCount, &cur);
+    env.storage()
+        .instance()
+        .set(&DataKey::UnpauseApprovalCount, &cur);
 }
 
 fn dec_unpause_approval_count(env: &Env) {
@@ -651,10 +719,10 @@ fn dec_unpause_approval_count(env: &Env) {
         .instance()
         .get(&DataKey::UnpauseApprovalCount)
         .unwrap_or(0u32);
-    if cur > 0 {
-        cur -= 1;
-    }
-    env.storage().instance().set(&DataKey::UnpauseApprovalCount, &cur);
+    cur = cur.saturating_sub(1);
+    env.storage()
+        .instance()
+        .set(&DataKey::UnpauseApprovalCount, &cur);
 }
 
 //================================================================================
@@ -681,4 +749,120 @@ pub fn set_escrow(env: &Env, quest_id: &Symbol, escrow: &EscrowInfo) {
     env.storage()
         .instance()
         .set(&DataKey::Escrow(quest_id.clone()), escrow);
+}
+
+/// Delete escrow record for a quest (cleanup after terminal state)
+pub fn delete_escrow(env: &Env, quest_id: &Symbol) {
+    env.storage()
+        .instance()
+        .remove(&DataKey::Escrow(quest_id.clone()));
+}
+
+//================================================================================
+// Contract Initialization Storage
+//================================================================================
+
+pub fn is_initialized(env: &Env) -> bool {
+    env.storage().instance().has(&DataKey::Initialized)
+}
+
+pub fn mark_initialized(env: &Env) {
+    env.storage().instance().set(&DataKey::Initialized, &true);
+}
+
+pub fn get_admin(env: &Env) -> Address {
+    env.storage()
+        .instance()
+        .get(&DataKey::ContractAdmin)
+        .expect("Contract not initialized")
+}
+
+pub fn set_contract_admin(env: &Env, address: &Address) {
+    env.storage()
+        .instance()
+        .set(&DataKey::ContractAdmin, address);
+}
+
+pub fn get_version(env: &Env) -> u32 {
+    env.storage()
+        .instance()
+        .get(&DataKey::ContractVersion)
+        .unwrap_or(0u32)
+}
+
+pub fn set_version(env: &Env, version: u32) {
+    env.storage()
+        .instance()
+        .set(&DataKey::ContractVersion, &version);
+}
+
+pub fn get_config(env: &Env) -> Vec<(String, String)> {
+    env.storage()
+        .instance()
+        .get(&DataKey::ContractConfig)
+        .unwrap_or_else(|| Vec::new(env))
+}
+
+pub fn set_config(env: &Env, config: &Vec<(String, String)>) {
+    env.storage()
+        .instance()
+        .set(&DataKey::ContractConfig, config);
+}
+
+//================================================================================
+// Quest Index (for query/filtering support)
+//================================================================================
+
+pub fn get_quest_ids(env: &Env) -> Vec<Symbol> {
+    env.storage()
+        .instance()
+        .get(&DataKey::QuestIds)
+        .unwrap_or_else(|| Vec::new(env))
+}
+
+pub fn add_quest_id(env: &Env, id: &Symbol) {
+    let mut ids = get_quest_ids(env);
+    ids.push_back(id.clone());
+    env.storage().instance().set(&DataKey::QuestIds, &ids);
+}
+
+//================================================================================
+// Platform & Creator Stats Storage
+//================================================================================
+
+pub fn get_platform_stats(env: &Env) -> PlatformStats {
+    env.storage()
+        .instance()
+        .get(&DataKey::PlatformStats)
+        .unwrap_or(PlatformStats {
+            total_quests_created: 0,
+            total_submissions: 0,
+            total_rewards_distributed: 0,
+            total_active_users: 0,
+            total_rewards_claimed: 0,
+        })
+}
+
+pub fn set_platform_stats(env: &Env, stats: &PlatformStats) {
+    env.storage()
+        .instance()
+        .set(&DataKey::PlatformStats, stats);
+}
+
+pub fn get_creator_stats(env: &Env, creator: &Address) -> CreatorStats {
+    env.storage()
+        .instance()
+        .get(&DataKey::CreatorStats(creator.clone()))
+        .unwrap_or(CreatorStats {
+            quests_created: 0,
+            total_rewards_posted: 0,
+            total_submissions_received: 0,
+            total_claims_paid: 0,
+        })
+}
+
+pub fn set_creator_stats(env: &Env, creator: &Address, stats: &CreatorStats) {
+    env.storage()
+        .instance()
+        .set(&DataKey::CreatorStats(creator.clone()), stats);
 }

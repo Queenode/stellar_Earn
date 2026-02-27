@@ -59,11 +59,8 @@ pub fn deposit(
 
     // Transfer tokens: creator → contract
     let token_client = token::Client::new(env, token_address);
-    let transfer_result = token_client.try_transfer(
-        depositor,
-        &env.current_contract_address(),
-        &amount,
-    );
+    let transfer_result =
+        token_client.try_transfer(depositor, &env.current_contract_address(), &amount);
 
     match transfer_result {
         Ok(Ok(_)) => {}
@@ -87,11 +84,14 @@ pub fn deposit(
             total_paid_out: 0,
             total_refunded: 0,
             is_active: true,
+            created_at: env.ledger().timestamp(),
+            deposit_count: 0,
         }
     };
 
-    // Update balance
+    // Update balance and deposit counter
     escrow.total_deposited += amount;
+    escrow.deposit_count += 1;
     storage::set_escrow(env, quest_id, &escrow);
 
     // Emit event
@@ -108,11 +108,7 @@ pub fn deposit(
 /// Returns Ok if the quest's escrow can cover the given amount.
 /// Returns Err(EscrowNotFound) if no escrow exists.
 /// Returns Err(InsufficientEscrow) if balance is too low.
-pub fn validate_sufficient(
-    env: &Env,
-    quest_id: &Symbol,
-    amount: i128,
-) -> Result<(), Error> {
+pub fn validate_sufficient(env: &Env, quest_id: &Symbol, amount: i128) -> Result<(), Error> {
     let escrow = storage::get_escrow(env, quest_id)?;
 
     if !escrow.is_active {
@@ -232,11 +228,7 @@ fn refund_remaining(env: &Env, quest_id: &Symbol) -> Result<i128, Error> {
 /// Quest.status = Cancelled
 /// Remaining escrow → Creator's wallet
 /// ```
-pub fn cancel_quest(
-    env: &Env,
-    quest_id: &Symbol,
-    caller: &Address,
-) -> Result<i128, Error> {
+pub fn cancel_quest(env: &Env, quest_id: &Symbol, caller: &Address) -> Result<i128, Error> {
     let quest = storage::get_quest(env, quest_id)?;
 
     // Only creator can cancel
@@ -268,6 +260,57 @@ pub fn cancel_quest(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// EXPIRE QUEST: Mark expired + refund
+// ═══════════════════════════════════════════════════════════════
+
+/// Mark a quest as expired and refund remaining escrow to the creator.
+///
+/// # Requirements
+/// - Caller must be the quest creator or admin
+/// - Quest must be Active or Paused
+/// - Quest deadline must have passed
+///
+/// # Flow
+/// ```text
+/// Quest.status = Expired
+/// Remaining escrow → Creator's wallet
+/// ```
+pub fn expire_quest(env: &Env, quest_id: &Symbol, caller: &Address) -> Result<i128, Error> {
+    let quest = storage::get_quest(env, quest_id)?;
+
+    // Only creator can expire
+    if *caller != quest.creator {
+        return Err(Error::Unauthorized);
+    }
+
+    // Must not already be terminal
+    if validation::is_quest_terminal(&quest.status) {
+        return Err(Error::QuestNotActive);
+    }
+
+    // Quest deadline must have passed
+    let current_time = env.ledger().timestamp();
+    if current_time < quest.deadline {
+        return Err(Error::QuestNotActive); // Not yet expired
+    }
+
+    // Validate the status transition
+    validation::validate_quest_status_transition(&quest.status, &QuestStatus::Expired)?;
+
+    // Update quest status
+    storage::update_quest_status(env, quest_id, QuestStatus::Expired)?;
+
+    // Refund escrow if it exists
+    let refunded = if storage::has_escrow(env, quest_id) {
+        refund_remaining(env, quest_id)?
+    } else {
+        0
+    };
+
+    Ok(refunded)
+}
+
+// ═══════════════════════════════════════════════════════════════
 // WITHDRAW UNCLAIMED: Reclaim leftover after quest ends
 // ═══════════════════════════════════════════════════════════════
 
@@ -282,11 +325,7 @@ pub fn cancel_quest(
 /// ```text
 /// Remaining escrow → Creator's wallet
 /// ```
-pub fn withdraw_unclaimed(
-    env: &Env,
-    quest_id: &Symbol,
-    caller: &Address,
-) -> Result<i128, Error> {
+pub fn withdraw_unclaimed(env: &Env, quest_id: &Symbol, caller: &Address) -> Result<i128, Error> {
     let quest = storage::get_quest(env, quest_id)?;
 
     // Only creator can withdraw

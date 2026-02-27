@@ -440,6 +440,9 @@
                               "symbol": "UnpauseApproval"
                             },
                             {
+                              "u32": 0
+                            },
+                            {
                               "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                             }
                           ]
@@ -453,6 +456,9 @@
                           "vec": [
                             {
                               "symbol": "UnpauseApproval"
+                            },
+                            {
+                              "u32": 0
                             },
                             {
                               "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
@@ -472,7 +478,19 @@
                           ]
                         },
                         "val": {
-                          "u32": 2
+                          "u32": 0
+                        }
+                      },
+                      {
+                        "key": {
+                          "vec": [
+                            {
+                              "symbol": "UnpauseRound"
+                            }
+                          ]
+                        },
+                        "val": {
+                          "u32": 1
                         }
                       },
                       {

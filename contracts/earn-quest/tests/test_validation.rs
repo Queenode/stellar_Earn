@@ -58,11 +58,7 @@ fn test_register_quest_creator_verifier_same_address_rejected() {
 
     // Creator and verifier are the same address - should fail
     let result = client.try_register_quest(
-        &quest_id,
-        &creator,
-        &token,
-        &1000,
-        &creator, // same as creator
+        &quest_id, &creator, &token, &1000, &creator, // same as creator
         &5000,
     );
 
@@ -273,8 +269,7 @@ fn test_register_quest_deadline_in_future_valid() {
         li.timestamp = 1000;
     });
 
-    let result =
-        client.try_register_quest(&quest_id, &creator, &token, &500, &verifier, &10000);
+    let result = client.try_register_quest(&quest_id, &creator, &token, &500, &verifier, &10000);
     assert!(result.is_ok());
 }
 
@@ -372,82 +367,64 @@ fn test_validate_badge_count_below_max_valid() {
 
 #[test]
 fn test_quest_status_active_to_paused_valid() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Active,
-        &QuestStatus::Paused,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Active, &QuestStatus::Paused);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_quest_status_active_to_completed_valid() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Active,
-        &QuestStatus::Completed,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Active, &QuestStatus::Completed);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_quest_status_active_to_expired_valid() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Active,
-        &QuestStatus::Expired,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Active, &QuestStatus::Expired);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_quest_status_paused_to_active_valid() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Paused,
-        &QuestStatus::Active,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Paused, &QuestStatus::Active);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_quest_status_paused_to_expired_valid() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Paused,
-        &QuestStatus::Expired,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Paused, &QuestStatus::Expired);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_quest_status_completed_to_active_rejected() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Completed,
-        &QuestStatus::Active,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Completed, &QuestStatus::Active);
     assert!(result.is_err());
 }
 
 #[test]
 fn test_quest_status_expired_to_active_rejected() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Expired,
-        &QuestStatus::Active,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Expired, &QuestStatus::Active);
     assert!(result.is_err());
 }
 
 #[test]
 fn test_quest_status_completed_to_paused_rejected() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Completed,
-        &QuestStatus::Paused,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Completed, &QuestStatus::Paused);
     assert!(result.is_err());
 }
 
 #[test]
 fn test_quest_status_same_to_same_rejected() {
-    let result = validation::validate_quest_status_transition(
-        &QuestStatus::Active,
-        &QuestStatus::Active,
-    );
+    let result =
+        validation::validate_quest_status_transition(&QuestStatus::Active, &QuestStatus::Active);
     assert!(result.is_err());
 }
 
@@ -623,8 +600,7 @@ fn test_duplicate_quest_registration_rejected() {
     client.register_quest(&quest_id, &creator, &token, &1000, &verifier, &10000);
 
     // Second registration with same ID should fail
-    let result =
-        client.try_register_quest(&quest_id, &creator, &token, &2000, &verifier, &20000);
+    let result = client.try_register_quest(&quest_id, &creator, &token, &2000, &verifier, &20000);
     assert!(result.is_err());
 }
 
